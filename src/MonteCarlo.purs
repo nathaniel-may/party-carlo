@@ -5,20 +5,26 @@ import Prelude
 
 import Data.Array as Array
 import Data.Int (floor, toNumber)
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Random (randomRange)
-
 import Probability (Probability)
 import Probability as Prob
 import SortedArray (SortedArray, length, (!!))
+import SortedArray as SortedArray
 
 
 type Dist = Array Probability
 
+monteCarloConfidenceInterval :: Probability -> Int -> Dist -> Effect (Maybe (Tuple Int Int))
+monteCarloConfidenceInterval p count dist = do
+  samples <- sample dist count
+  pure $ confidenceInterval p (SortedArray.fromArray samples)
+
 confidenceInterval :: ∀ a. Ord a => Probability -> SortedArray a -> Maybe (Tuple a a)
+confidenceInterval p _ | Prob.toNumber p <= 0.5 = Nothing
 confidenceInterval p sorted = Tuple <$> low <*> high where
     low = sorted !! floor ((1.0 - Prob.toNumber p) * toNumber len)
     high = sorted !! floor (Prob.toNumber p * toNumber len)
