@@ -6,15 +6,15 @@ module Probability (
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
+import Data.Either (Either(..))
 import Test.QuickCheck.Arbitrary (class Arbitrary)
 import Test.QuickCheck.Gen (choose)
 
 
 data Probability = Probability Number
 
-probability :: Number -> Maybe Probability
-probability p = if p <= 1.0 && p >= 0.0 then Just (Probability p) else Nothing
+probability :: Number -> Either Number Probability
+probability p = if p <= 1.0 && p >= 0.0 then Right (Probability p) else Left p
 
 toNumber :: Probability -> Number
 toNumber (Probability x) = x
