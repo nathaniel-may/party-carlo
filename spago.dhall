@@ -15,12 +15,14 @@ to generate this file without the comments in this block.
   [ "arrays"
   , "console"
   , "effect"
+  , "either"
   , "foldable-traversable"
   , "integers"
   , "maybe"
   , "prelude"
   , "quickcheck"
   , "random"
+  , "transformers"
   , "tuples"
   ]
 , packages = ./packages.dhall
