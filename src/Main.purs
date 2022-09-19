@@ -15,7 +15,7 @@ import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class.Console (log)
+import Effect.Class.Console (debug, error, log, warn)
 import Effect.Now (now)
 import Halogen as H
 import Halogen.Aff as HA
@@ -169,18 +169,18 @@ handleAction :: ∀ o m. MonadAff m => Action -> H.HalogenM State Action () o m 
 handleAction (Parse s) = do
     case parse s of
         Left e -> do
-          log $ "parsing failed: " <> displayError e
+          debug $ "parsing failed: " <> displayError e
           H.modify_ (_ { error = Just e })
         Right parsed -> do 
           H.modify_ (_ { parsed = Just parsed })
-          log $ "parsed " <> (show $ length parsed) <> " probabilities"
+          debug $ "parsed " <> (show $ length parsed) <> " probabilities"
 
 handleAction RunExperiments = do
-    log "run action initiated"
+    debug "run action initiated"
     st <- H.get
     let count = 100000
     case st.parsed of
-        Nothing -> log "no parsed values to run on"
+        Nothing -> warn "no parsed values to run on"
         Just dist -> do
             log $ "running " <> show count <> " experiments ..."
             H.modify_ (_ { loading = true })
@@ -196,7 +196,7 @@ handleAction RunExperiments = do
             case m4 of
                 Nothing -> do
                     H.modify_ (_ { error = Just InternalError })
-                    log "confidence interval calculation failed"
+                    error "confidence interval calculation failed"
                 Just t4@(Tuple4 p90val p95val p99val p999val) -> do
                     H.modify_ (_ { result = Just { p90: p90val
                                                  , p95: p95val
@@ -205,4 +205,4 @@ handleAction RunExperiments = do
                     H.modify_ (_ { loading = false, error = Nothing })
                     end <- H.liftEffect $ map toDateTime now
                     log $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
-                    log $ showTuple4 t4
+                    debug $ "result set: " <> (showTuple4 t4)
