@@ -3,6 +3,7 @@ module Main where
 import Prelude
 
 import Control.Monad.Error.Class (class MonadError, liftEither)
+import Data.Array (length)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..), either)
@@ -76,9 +77,14 @@ data Error
     | InvalidProbability Number
     | InternalError
 
+displayError :: Error -> String
+displayError (InvalidNumber s) = "Invalid Number '" <> show s <> "' "
+displayError (InvalidProbability n) = "Invalid Probability '" <> show n <> "' "
+displayError (InternalError) = "Internal Error"
+
 data Action 
     = RunExperiments
-    | Parse
+    | Parse String
 
 component :: ∀ m a b c. MonadAff m => Component a b c m
 component =
@@ -106,6 +112,17 @@ parse s = do
 parseNum :: String -> Either Error Number
 parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
 
+resultsDiv :: ∀ a. State -> HTML a Action
+resultsDiv st = case st.result of
+    Nothing -> HH.div [ HP.class_ (H.ClassName "results") ] []
+    Just result -> HH.div 
+        [ HP.class_ (H.ClassName "results") ] 
+        [ HH.h2_ [ HH.text ("90% - " <> showTuple result.p90) ] 
+        , HH.h2_ [ HH.text ("95% - " <> showTuple result.p95) ] 
+        , HH.h2_ [ HH.text ("99% - " <> showTuple result.p99) ] 
+        , HH.h2_ [ HH.text ("99.9% - " <> showTuple result.p999) ] 
+        ]
+
 render :: ∀ a. State -> HTML a Action
 render st =
     HH.div
@@ -124,20 +141,15 @@ render st =
                     ]
                     [ HH.text if st.loading then "Experimenting..." else "Run Experiments" ]
                 ]
-            , HH.div 
-                [ HP.class_ (H.ClassName "results") ] 
-                [ HH.h2_ [ HH.text "90% - TODO" ] 
-                , HH.h2_ [ HH.text "95% - TODO" ] 
-                , HH.h2_ [ HH.text "99% - TODO" ] 
-                , HH.h2_ [ HH.text "99.9% - TODO" ] 
-                ]
+            , resultsDiv st
             , HH.div
                 [ HP.class_ (H.ClassName "input") ]  
                 [ HH.textarea
                     [ HP.disabled st.loading
                     , HP.id "input"
                     , HP.value st.input
-                    , HE.onFocusOut (\_ -> Parse)
+                    -- TODO this is more frequent than we need. Other option?
+                    , HE.onValueInput Parse
                     ]
                 ]
             , HH.div
@@ -154,17 +166,21 @@ render st =
 
 handleAction :: ∀ o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
 
-handleAction Parse = do
-    st <- H.get
-    case parse st.input of
-        Left e -> H.modify_ (_ { error = Just e })
-        Right parsed -> H.modify_ (_ { parsed = Just parsed })
+handleAction (Parse s) = do
+    case parse s of
+        Left e -> do
+          log $ "parsing failed: " <> displayError e
+          H.modify_ (_ { error = Just e })
+        Right parsed -> do 
+          H.modify_ (_ { parsed = Just parsed })
+          log $ "parsed " <> (show $ length parsed) <> " probabilities"
 
 handleAction RunExperiments = do
+    log "run action initiated"
     st <- H.get
-    let count = 1000000
+    let count = 100000
     case st.parsed of
-        Nothing -> pure unit
+        Nothing -> log "no parsed values to run on"
         Just dist -> do
             log $ "running " <> show count <> " experiments ..."
             H.modify_ (_ { loading = true })
@@ -178,7 +194,9 @@ handleAction RunExperiments = do
                 <*> confidenceInterval p99 sorted
                 <*> confidenceInterval p999 sorted)
             case m4 of
-                Nothing -> H.modify_ (_ { error = Just InternalError })
+                Nothing -> do
+                    H.modify_ (_ { error = Just InternalError })
+                    log "confidence interval calculation failed"
                 Just t4@(Tuple4 p90val p95val p99val p999val) -> do
                     H.modify_ (_ { result = Just { p90: p90val
                                                  , p95: p95val
