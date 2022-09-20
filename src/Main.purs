@@ -84,6 +84,7 @@ displayError (InternalError) = "Internal Error"
 
 data Action 
     = RunExperiments
+    | EditData
     | Parse String
 
 component :: ∀ m a b c. MonadAff m => Component a b c m
@@ -122,6 +123,20 @@ resultsDiv st = case st.result of
         , HH.h2_ [ HH.text ("99% - " <> showTuple result.p99) ] 
         , HH.h2_ [ HH.text ("99.9% - " <> showTuple result.p999) ] 
         ]
+  
+inputDiv :: ∀ a. State -> HTML a Action
+inputDiv st = case st.result of 
+  Just _ -> HH.div [ HP.class_ (H.ClassName "VContainer") ] []
+  Nothing -> HH.div
+    [ HP.class_ (H.ClassName "VContainer") ]  
+    [ HH.textarea
+        [ HP.disabled st.loading
+        , HP.id "input"
+        , HP.value st.input
+        -- TODO this is more frequent than we need. Other option?
+        , HE.onValueInput Parse
+        ]
+    ]
 
 render :: ∀ a. State -> HTML a Action
 render st =
@@ -137,21 +152,18 @@ render st =
                     [ HP.disabled st.loading
                     , HP.id "RunExperiments"
                     , HP.type_ HP.ButtonButton
-                    , HE.onClick (\_ -> RunExperiments)
+                    , HE.onClick (\_ -> case st.result of
+                        Nothing -> RunExperiments
+                        Just _ -> EditData)
                     ]
-                    [ HH.text if st.loading then "Experimenting..." else "Run Experiments" ]
+                    [ HH.text if st.loading 
+                              then "..." 
+                              else case st.result of 
+                                Just _ -> "Edit Data" 
+                                Nothing -> "Run" ]
                 ]
             , resultsDiv st
-            , HH.div
-                [ HP.class_ (H.ClassName "input") ]  
-                [ HH.textarea
-                    [ HP.disabled st.loading
-                    , HP.id "input"
-                    , HP.value st.input
-                    -- TODO this is more frequent than we need. Other option?
-                    , HE.onValueInput Parse
-                    ]
-                ]
+            , inputDiv st
             , HH.div
                 [ HP.class_ (H.ClassName "VContainer") ]
                 [ HH.footer_
@@ -166,7 +178,12 @@ render st =
 
 handleAction :: ∀ o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
 
+handleAction EditData = do
+  H.modify_ (_ { result = Nothing })
+  debug $ "returning to edit view"
+
 handleAction (Parse s) = do
+    H.modify_ (_ { input = s })
     case parse s of
         Left e -> do
           debug $ "parsing failed: " <> displayError e
@@ -177,8 +194,8 @@ handleAction (Parse s) = do
 
 handleAction RunExperiments = do
     debug "run action initiated"
-    st <- H.get
     let count = 100000
+    st <- H.get
     case st.parsed of
         Nothing -> warn "no parsed values to run on"
         Just dist -> do
@@ -201,8 +218,9 @@ handleAction RunExperiments = do
                     H.modify_ (_ { result = Just { p90: p90val
                                                  , p95: p95val
                                                  , p99: p99val
-                                                 , p999: p999val } })
-                    H.modify_ (_ { loading = false, error = Nothing })
+                                                 , p999: p999val },
+                                   loading = false,
+                                   error = Nothing })
                     end <- H.liftEffect $ map toDateTime now
                     log $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
                     debug $ "result set: " <> (showTuple4 t4)
