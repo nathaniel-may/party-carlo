@@ -59,28 +59,27 @@ main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI component unit body
 
+-- TODO maybe instead of a pile of maybe's it should be one big sum type? Err | Parsed _ | Results |
 type State =
   { dist :: Maybe (SortedArray Int)
   , loading :: Boolean
   , input :: String
-  , parsed :: Maybe (Array Probability)
+  , showError :: Boolean
+  , parsed :: Either Error (Array Probability)
   , result :: Maybe ({ p90 :: Tuple Int Int 
                      , p95 :: Tuple Int Int 
                      , p99 :: Tuple Int Int 
                      , p999 :: Tuple Int Int 
                      })
-  , error :: Maybe (Error)
   }
 
 data Error
     = InvalidNumber String
     | InvalidProbability Number
-    | InternalError
 
 displayError :: Error -> String
 displayError (InvalidNumber s) = "Invalid Number '" <> show s <> "' "
 displayError (InvalidProbability n) = "Invalid Probability '" <> show n <> "' "
-displayError (InternalError) = "Internal Error"
 
 data Action 
     = RunExperiments
@@ -100,9 +99,9 @@ initialState _ =
   { dist: Nothing
   , loading: false
   , input: ""
-  , parsed: Nothing
+  , parsed: Right []
   , result: Nothing
-  , error: Nothing
+  , showError: false
   }
 
 parse :: String -> Either Error (Array Probability)
@@ -138,6 +137,20 @@ inputDiv st = case st.result of
         ]
     ]
 
+errorDiv :: ∀ a. State -> HTML a Action
+errorDiv st = if not st.showError 
+              then HH.div [ HP.class_ (H.ClassName "VContainer") ] [] 
+              else let 
+    msg = case st.parsed of
+      Right _ -> ""
+      Left (InvalidNumber s) -> "\"" <> s <> "\"" <> " is not a number"
+      Left (InvalidProbability n) -> (show n) <> "is not a probability (between 0 and 1)"
+    in 
+      HH.div
+        [ HP.class_ (H.ClassName "VContainer") ]  
+        [ HH.text msg ]
+    
+
 render :: ∀ a. State -> HTML a Action
 render st =
     HH.div
@@ -162,6 +175,7 @@ render st =
                                 Just _ -> "Edit Data" 
                                 Nothing -> "Run" ]
                 ]
+            , errorDiv st
             , resultsDiv st
             , inputDiv st
             , HH.div
@@ -183,22 +197,23 @@ handleAction EditData = do
   debug $ "returning to edit view"
 
 handleAction (Parse s) = do
-    H.modify_ (_ { input = s })
+    H.modify_ (_ { input = s, showError = false })
     case parse s of
         Left e -> do
           debug $ "parsing failed: " <> displayError e
-          H.modify_ (_ { error = Just e })
+          H.modify_ (_ { parsed = Left e })
         Right parsed -> do 
-          H.modify_ (_ { parsed = Just parsed })
+          H.modify_ (_ { parsed = Right parsed })
           debug $ "parsed " <> (show $ length parsed) <> " probabilities"
 
 handleAction RunExperiments = do
     debug "run action initiated"
+    H.modify_ (_ { showError = true })
     let count = 100000
     st <- H.get
     case st.parsed of
-        Nothing -> warn "no parsed values to run on"
-        Just dist -> do
+        Left _ -> warn "no parsed values to run on"
+        Right dist -> do
             log $ "running " <> show count <> " experiments ..."
             H.modify_ (_ { loading = true })
             start <- H.liftEffect $ map toDateTime now
@@ -212,15 +227,15 @@ handleAction RunExperiments = do
                 <*> confidenceInterval p999 sorted)
             case m4 of
                 Nothing -> do
-                    H.modify_ (_ { error = Just InternalError })
+                    -- TODO this kind of eats internal errors.
+                    H.modify_ (_ { result = Nothing })
                     error "confidence interval calculation failed"
                 Just t4@(Tuple4 p90val p95val p99val p999val) -> do
                     H.modify_ (_ { result = Just { p90: p90val
                                                  , p95: p95val
                                                  , p99: p99val
                                                  , p999: p999val },
-                                   loading = false,
-                                   error = Nothing })
+                                   loading = false })
                     end <- H.liftEffect $ map toDateTime now
                     log $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
                     debug $ "result set: " <> (showTuple4 t4)
