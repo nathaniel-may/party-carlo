@@ -11,7 +11,6 @@ import Data.Foldable (foldr)
 import Data.Int as Int
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
-import Data.Ord as Ord
 import Data.String (null, trim)
 import Data.String.Utils (lines)
 import Data.Time.Duration (Milliseconds)
@@ -65,7 +64,6 @@ main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI component unit body
 
--- TODO maybe instead of a pile of maybe's it should be one big sum type? Err | Parsed _ | Results |
 type State =
   { loading :: Boolean
   , input :: String
@@ -120,23 +118,23 @@ parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
 
 resultsDiv :: ∀ a. State -> HTML a Action
 resultsDiv st = case st.result of
-    Nothing -> HH.div [ HP.class_ (H.ClassName "HContainer") ] []
+    Nothing -> HH.div_ []
     Just result -> let
       heights' = Int.toNumber <<< fst <$> (group result.dist)
       maxHeight = 250.0
-      maxWidth = 400.0
-      factor = maxHeight / max 0.0 heights'
-      heights = (factor * _) <$> heights'
+      maxWidth = 700.0
       barCount = length heights
+      barWidth = (maxWidth / Int.toNumber barCount) + 1.0
+      factor = maxHeight / arrayMax 0.0 heights'
+      heights = (factor * _) <$> heights'
       xoffsets = iterate (barCount) (_ + maxWidth / Int.toNumber barCount) 0.0
     in
-      HH.div 
-        [ HP.class_ (H.ClassName "HContainer") ]
-        [ SE.svg [ SA.class_ (H.ClassName "results"), SA.height maxHeight ] (uncurry (barWithHeight maxHeight) <$> zip heights xoffsets) ]
+      HH.div [ HP.class_ (H.ClassName "chart-div") ]
+        [ SE.svg [ SA.class_ (H.ClassName "chart"), SA.viewBox 0.0 0.0 maxWidth maxHeight, SA.preserveAspectRatio Nothing SA.Meet ] (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets) ]
 
-barWithHeight :: ∀ a. Number -> Number -> Number -> HTML a Action
-barWithHeight maxHeight barHeight xoffset = 
-  SE.rect [SA.class_ (H.ClassName "bar"), SA.x xoffset, SA.y (maxHeight - barHeight), SA.width 30.0, SA.height barHeight]
+barWithHeight :: ∀ a. Number -> Number -> Number -> Number -> HTML a Action
+barWithHeight barWidth maxHeight barHeight xoffset = 
+  SE.rect [SA.class_ (H.ClassName "bar"), SA.x xoffset, SA.y (maxHeight - barHeight), SA.width barWidth, SA.height barHeight]
 
 group :: ∀ a. Eq a => SortedArray a -> Array (Tuple Int a)
 group xs = foldr foo [] (SortedArray.toArray xs) where
@@ -151,8 +149,8 @@ iterate count _ _ | count <= 0 = []
 iterate count f x = cons x' (iterate (count - 1) f x')
   where x' = f x
 
-max :: ∀ a. Ord a => a -> Array a -> a
-max = foldr Ord.max
+arrayMax :: ∀ a. Ord a => a -> Array a -> a
+arrayMax = foldr max
 
     -- Just result -> HH.div 
     --     [ HP.class_ (H.ClassName "results") ] 
@@ -164,68 +162,53 @@ max = foldr Ord.max
   
 inputDiv :: ∀ a. State -> HTML a Action
 inputDiv st = case st.result of 
-  Just _ -> HH.div [ HP.class_ (H.ClassName "VContainer") ] []
-  Nothing -> HH.div
-    [ HP.class_ (H.ClassName "VContainer") ]  
-    [ HH.textarea
-        [ HP.disabled st.loading
-        , HP.id "input"
-        , HP.value st.input
-        -- TODO this is more frequent than we need. Other option?
-        , HE.onValueInput Parse
-        ]
+  Just _ -> HH.div_ []
+  Nothing -> HH.textarea
+    [ HP.disabled st.loading
+    , HP.id "input"
+    , HP.value st.input
+    -- TODO this is more frequent than we need. Other option?
+    , HE.onValueInput Parse
     ]
 
 errorDiv :: ∀ a. State -> HTML a Action
 errorDiv st = if not st.showError 
-              then HH.div [ HP.class_ (H.ClassName "VContainer") ] [] 
+              then HH.div_ [] 
               else let 
     msg = case st.parsed of
       Right _ -> ""
       Left (InvalidNumber s) -> "\"" <> s <> "\"" <> " is not a number"
       Left (InvalidProbability s _) -> s <> " is not a probability (between 0 and 1)"
     in 
-      HH.div
-        [ HP.class_ (H.ClassName "VContainer") ]  
-        [ HH.text msg ]
+      HH.text msg
     
 
 render :: ∀ a. State -> HTML a Action
 render st =
     HH.div
-        [ HP.class_ (H.ClassName "VContainer"), HP.id "root" ]
-        [ HH.div_
-            [ HH.div
-                [ HP.class_ (H.ClassName "HContainer") ]
-                [ HH.h1_ [ HH.text "Party Carlo" ] ]
-            , HH.div
-                [ HP.class_ (H.ClassName "HContainer") ] 
-                [ HH.button
-                    [ HP.disabled st.loading
-                    , HP.id "RunExperiments"
-                    , HP.type_ HP.ButtonButton
-                    , HE.onClick (\_ -> case st.result of
-                        Nothing -> RunExperiments
-                        Just _ -> EditData)
-                    ]
-                    [ HH.text if st.loading 
-                              then "..." 
-                              else case st.result of 
-                                Just _ -> "Edit Data" 
-                                Nothing -> "Run" ]
-                ]
-            , errorDiv st
-            , resultsDiv st
-            , inputDiv st
-            , HH.div
-                [ HP.class_ (H.ClassName "VContainer") ]
-                [ HH.footer_
-                    [ HH.text "PureScript + Netlify | Source on " 
-                    , HH.a 
-                        [ HP.href "https://github.com/nathaniel-may/party-carlo" ] 
-                        [ HH.text "GitHub" ]
-                    ]
-                ]
+        [ HP.class_ (H.ClassName "vcontainer") ]
+        [ HH.h1_ [ HH.text "Party Carlo" ]
+        , HH.button
+            [ HP.disabled st.loading
+            , HP.id "RunExperiments"
+            , HP.type_ HP.ButtonButton
+            , HE.onClick (\_ -> case st.result of
+                Nothing -> RunExperiments
+                Just _ -> EditData)
+            ]
+            [ HH.text if st.loading 
+                      then "..." 
+                      else case st.result of 
+                        Just _ -> "Edit Data" 
+                        Nothing -> "Run" ]
+        , errorDiv st
+        , resultsDiv st
+        , inputDiv st
+        , HH.footer_
+            [ HH.text "PureScript + Netlify | Source on " 
+            , HH.a 
+                [ HP.href "https://github.com/nathaniel-may/party-carlo" ] 
+                [ HH.text "GitHub" ]
             ]
         ]
 
