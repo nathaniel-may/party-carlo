@@ -27,6 +27,7 @@ to generate this file without the comments in this block.
   , "prelude"
   , "quickcheck"
   , "random"
+  , "strings"
   , "stringutils"
   , "transformers"
   , "tuples"

@@ -3,12 +3,13 @@ module Main where
 import Prelude
 
 import Control.Monad.Error.Class (class MonadError, liftEither)
-import Data.Array (length)
+import Data.Array (length, filter)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..), either)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
+import Data.String (null, trim)
 import Data.String.Utils (lines)
 import Data.Time.Duration (Milliseconds)
 import Data.Traversable (sequence)
@@ -104,8 +105,11 @@ initialState _ =
   , showError: false
   }
 
-parse :: String -> Either Error (Array Probability)
-parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> lines input
+stripInput :: String -> Array String
+stripInput s = filter (not null) $ trim <$> lines s
+
+parse :: Array String -> Either Error (Array Probability)
+parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> input
 
 parseNum :: String -> Either Error Number
 parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
@@ -196,7 +200,7 @@ handleAction EditData = do
 
 handleAction (Parse s) = do
     H.modify_ (_ { input = s, showError = false })
-    case parse s of
+    case parse <<< stripInput $ s of
         Left e -> do
           debug $ "parsing failed: " <> displayError e
           H.modify_ (_ { parsed = Left e })
