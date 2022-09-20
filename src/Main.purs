@@ -3,17 +3,20 @@ module Main where
 import Prelude
 
 import Control.Monad.Error.Class (class MonadError, liftEither)
-import Data.Array (length, filter)
+import Data.Array (cons, length, filter, uncons, zip)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..), either)
+import Data.Foldable (foldr)
+import Data.Int as Int
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
+import Data.Ord as Ord
 import Data.String (null, trim)
 import Data.String.Utils (lines)
 import Data.Time.Duration (Milliseconds)
 import Data.Traversable (sequence)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst, uncurry)
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class.Console (debug, error, log, warn)
@@ -25,6 +28,8 @@ import Halogen.HTML as HH
 import Halogen.HTML.Core (HTML)
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Halogen.Svg.Attributes as SA
+import Halogen.Svg.Elements as SE
 import Halogen.VDom.Driver (runUI)
 import MonteCarlo (confidenceInterval, sample)
 import Probability (p90, p95, p99, p999, probability, Probability)
@@ -62,12 +67,12 @@ main = HA.runHalogenAff do
 
 -- TODO maybe instead of a pile of maybe's it should be one big sum type? Err | Parsed _ | Results |
 type State =
-  { dist :: Maybe (SortedArray Int)
-  , loading :: Boolean
+  { loading :: Boolean
   , input :: String
   , showError :: Boolean
   , parsed :: Either Error (Array Probability)
-  , result :: Maybe ({ p90 :: Tuple Int Int 
+  , result :: Maybe ({ dist :: SortedArray Int
+                     , p90 :: Tuple Int Int 
                      , p95 :: Tuple Int Int 
                      , p99 :: Tuple Int Int 
                      , p999 :: Tuple Int Int 
@@ -97,8 +102,7 @@ component =
 
 initialState :: ∀ i. i -> State
 initialState _ = 
-  { dist: Nothing
-  , loading: false
+  { loading: false
   , input: ""
   , parsed: Right []
   , result: Nothing
@@ -116,14 +120,47 @@ parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
 
 resultsDiv :: ∀ a. State -> HTML a Action
 resultsDiv st = case st.result of
-    Nothing -> HH.div [ HP.class_ (H.ClassName "results") ] []
-    Just result -> HH.div 
-        [ HP.class_ (H.ClassName "results") ] 
-        [ HH.h2_ [ HH.text ("90% - " <> showTuple result.p90) ] 
-        , HH.h2_ [ HH.text ("95% - " <> showTuple result.p95) ] 
-        , HH.h2_ [ HH.text ("99% - " <> showTuple result.p99) ] 
-        , HH.h2_ [ HH.text ("99.9% - " <> showTuple result.p999) ] 
-        ]
+    Nothing -> HH.div [ HP.class_ (H.ClassName "HContainer") ] []
+    Just result -> let
+      heights' = Int.toNumber <<< fst <$> (group result.dist)
+      maxHeight = 250.0
+      maxWidth = 400.0
+      factor = maxHeight / max 0.0 heights'
+      heights = (factor * _) <$> heights'
+      barCount = length heights
+      xoffsets = iterate (barCount) (_ + maxWidth / Int.toNumber barCount) 0.0
+    in
+      HH.div 
+        [ HP.class_ (H.ClassName "HContainer") ]
+        [ SE.svg [ SA.class_ (H.ClassName "results"), SA.height maxHeight ] (uncurry (barWithHeight maxHeight) <$> zip heights xoffsets) ]
+
+barWithHeight :: ∀ a. Number -> Number -> Number -> HTML a Action
+barWithHeight maxHeight barHeight xoffset = 
+  SE.rect [SA.class_ (H.ClassName "bar"), SA.x xoffset, SA.y (maxHeight - barHeight), SA.width 30.0, SA.height barHeight]
+
+group :: ∀ a. Eq a => SortedArray a -> Array (Tuple Int a)
+group xs = foldr foo [] (SortedArray.toArray xs) where
+  foo x ys = case uncons ys of
+    Nothing -> [(Tuple 1 x)]
+    Just { head: (Tuple i x'), tail: t } -> if x == x' 
+                                            then cons (Tuple (i + 1) x') t 
+                                            else cons (Tuple 1 x) ys
+
+iterate :: ∀ a. Int -> (a -> a) -> a -> Array a
+iterate count _ _ | count <= 0 = []
+iterate count f x = cons x' (iterate (count - 1) f x')
+  where x' = f x
+
+max :: ∀ a. Ord a => a -> Array a -> a
+max = foldr Ord.max
+
+    -- Just result -> HH.div 
+    --     [ HP.class_ (H.ClassName "results") ] 
+    --     [ HH.h2_ [ HH.text ("90% - " <> showTuple result.p90) ] 
+    --     , HH.h2_ [ HH.text ("95% - " <> showTuple result.p95) ] 
+    --     , HH.h2_ [ HH.text ("99% - " <> showTuple result.p99) ] 
+    --     , HH.h2_ [ HH.text ("99.9% - " <> showTuple result.p999) ] 
+    --     ]
   
 inputDiv :: ∀ a. State -> HTML a Action
 inputDiv st = case st.result of 
@@ -156,13 +193,13 @@ errorDiv st = if not st.showError
 render :: ∀ a. State -> HTML a Action
 render st =
     HH.div
-        [ HP.class_ (H.ClassName "VContainer") ]
+        [ HP.class_ (H.ClassName "VContainer"), HP.id "root" ]
         [ HH.div_
             [ HH.div
                 [ HP.class_ (H.ClassName "HContainer") ]
                 [ HH.h1_ [ HH.text "Party Carlo" ] ]
             , HH.div
-                [ HP.class_ (H.ClassName "VContainer") ] 
+                [ HP.class_ (H.ClassName "HContainer") ] 
                 [ HH.button
                     [ HP.disabled st.loading
                     , HP.id "RunExperiments"
@@ -221,7 +258,6 @@ handleAction RunExperiments = do
             start <- H.liftEffect $ map toDateTime now
             samples <- H.liftEffect $ sample dist count
             let sorted = SortedArray.fromArray samples
-            H.modify_ (_ { dist = Just sorted })
             let m4 = ( 
                 Tuple4 <$> confidenceInterval p90 sorted
                 <*> confidenceInterval p95 sorted
@@ -233,7 +269,8 @@ handleAction RunExperiments = do
                     H.modify_ (_ { result = Nothing })
                     error "confidence interval calculation failed"
                 Just t4@(Tuple4 p90val p95val p99val p999val) -> do
-                    H.modify_ (_ { result = Just { p90: p90val
+                    H.modify_ (_ { result = Just { dist: sorted
+                                                 , p90: p90val
                                                  , p95: p95val
                                                  , p99: p99val
                                                  , p999: p999val },
