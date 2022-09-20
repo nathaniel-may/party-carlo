@@ -75,11 +75,11 @@ type State =
 
 data Error
     = InvalidNumber String
-    | InvalidProbability Number
+    | InvalidProbability String Number
 
 displayError :: Error -> String
 displayError (InvalidNumber s) = "Invalid Number '" <> show s <> "' "
-displayError (InvalidProbability n) = "Invalid Probability '" <> show n <> "' "
+displayError (InvalidProbability _ n) = "Invalid Probability '" <> show n <> "' "
 
 data Action 
     = RunExperiments
@@ -105,9 +105,7 @@ initialState _ =
   }
 
 parse :: String -> Either Error (Array Probability)
-parse s = do
-  nums <- sequence $ parseNum <$> lines s
-  sequence $ (mapLeft InvalidProbability <<< probability) <$> nums
+parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> lines input
 
 parseNum :: String -> Either Error Number
 parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
@@ -144,7 +142,7 @@ errorDiv st = if not st.showError
     msg = case st.parsed of
       Right _ -> ""
       Left (InvalidNumber s) -> "\"" <> s <> "\"" <> " is not a number"
-      Left (InvalidProbability n) -> (show n) <> "is not a probability (between 0 and 1)"
+      Left (InvalidProbability s _) -> s <> " is not a probability (between 0 and 1)"
     in 
       HH.div
         [ HP.class_ (H.ClassName "VContainer") ]  
