@@ -31,6 +31,14 @@ h1 {
     color: #333
 }
 
+p {
+    max-width: 500px;
+}
+
+.pcenter {
+    text-align: center;
+}
+
 .vcontainer {
     display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
     display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
@@ -61,6 +69,7 @@ h1 {
 .chart {
     width: 100%;
     max-height: 300px;
+    margin-top: 20px;
 }
 
 .bar {
@@ -92,7 +101,7 @@ button {
     margin-left: 5px;
     margin-right: 5px;
     margin-top: 10px;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     font-size: 16px;
     text-align: center;
     text-decoration: none;
