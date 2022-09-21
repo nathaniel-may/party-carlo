@@ -22,6 +22,7 @@
 
 body {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: white;
 }
 
 h1 {
@@ -63,7 +64,11 @@ h1 {
 }
 
 .bar {
-    fill: #9CE4AD;
+    fill: #F2CEE6;
+}
+
+.marker {
+    fill: #394C66
 }
 
 textarea {

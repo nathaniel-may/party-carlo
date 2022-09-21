@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Control.Monad.Error.Class (class MonadError, liftEither)
-import Data.Array (cons, length, filter, uncons, zip)
+import Data.Array (cons, length, filter, snoc, uncons, zip)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..), either)
@@ -69,13 +69,23 @@ type State =
   , input :: String
   , showError :: Boolean
   , parsed :: Either Error (Array Probability)
-  , result :: Maybe ({ dist :: SortedArray Int
-                     , p90 :: Tuple Int Int 
-                     , p95 :: Tuple Int Int 
-                     , p99 :: Tuple Int Int 
-                     , p999 :: Tuple Int Int 
-                     })
+  , result :: Maybe Result
   }
+
+type Result = 
+  { dist :: SortedArray Int
+  , p90 :: Tuple Int Int 
+  , p95 :: Tuple Int Int 
+  , p99 :: Tuple Int Int 
+  , p999 :: Tuple Int Int 
+  , showBars :: Maybe Interval
+  }
+
+data Interval
+  = P90
+  | P95
+  | P99
+  | P999
 
 data Error
     = InvalidNumber String
@@ -89,6 +99,7 @@ data Action
     = RunExperiments
     | EditData
     | Parse String
+    | ShowBars Interval
 
 component :: ∀ m a b c. MonadAff m => Component a b c m
 component =
@@ -132,20 +143,48 @@ resultsDiv st = case st.result of
       HH.div [ HP.class_ (H.ClassName "chart-div") ]
         [ SE.svg 
           [ SA.class_ (H.ClassName "chart"), SA.viewBox 0.0 0.0 maxWidth maxHeight, SA.preserveAspectRatio Nothing SA.Meet ]
-          (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets) 
+          (arrayAppend 
+            (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets)
+            (riemannBars maxHeight barWidth result.showBars heights))
         , HH.div [ HP.class_ (H.ClassName "hcontainer") ] 
             [ HH.div
-            [ HP.class_ (H.ClassName "p"), HP.id "p90" ]
+            [ HP.class_ (H.ClassName "p")
+            , HP.id "p90" 
+            , HE.onMouseOver (\_ -> ShowBars P90)]
             [ HH.text $ "p90\n" <> showTuple result.p90 ] 
             , HH.div
-            [ HP.class_ (H.ClassName "p"), HP.id "p95" ]
+            [ HP.class_ (H.ClassName "p")
+            , HP.id "p95" 
+            , HE.onMouseOver (\_ -> ShowBars P95) ]
             [ HH.text $ "p95\n" <> showTuple result.p95 ] 
             , HH.div
-            [ HP.class_ (H.ClassName "p"), HP.id "p99" ]
+            [ HP.class_ (H.ClassName "p")
+            , HP.id "p99" 
+            , HE.onMouseOver (\_ -> ShowBars P99) ]
             [ HH.text $ "p99\n" <> showTuple result.p99 ] 
             , HH.div
-            [ HP.class_ (H.ClassName "p"), HP.id "p999" ]
+            [ HP.class_ (H.ClassName "p")
+            , HP.id "p999" 
+            , HE.onMouseOver (\_ -> ShowBars P999) ]
             [ HH.text $ "p99.9\n" <> showTuple result.p999 ] ] ]
+
+riemannBars :: ∀ a. Number -> Number -> Maybe Interval -> Array Number -> Array (HTML a Action)
+riemannBars h barWidth interval dist = let
+    total = foldr (+) 0.0 dist
+  in
+    case interval of
+      Nothing -> []
+      Just P90 -> [ riemannBar (barWidth * (riemannBound (total * 0.1) dist)) h
+                  , riemannBar (barWidth * (riemannBound (total - (total * 0.1))) dist) h ]
+      Just P95 -> [ riemannBar (barWidth * (riemannBound (total * 0.05) dist)) h
+                  , riemannBar (barWidth * (riemannBound (total - (total * 0.05)) dist)) h ]
+      Just P99 -> [ riemannBar (barWidth * (riemannBound (total * 0.01) dist)) h
+                  , riemannBar (barWidth * (riemannBound (total - (total * 0.01)) dist)) h ]
+      Just P999 -> [ riemannBar (barWidth * (riemannBound (total * 0.001) dist)) h
+                   , riemannBar (barWidth * (riemannBound (total - (total * 0.001)) dist)) h ]
+
+riemannBar :: ∀ a. Number -> Number -> HTML a Action
+riemannBar x h =  SE.rect [SA.class_ (H.ClassName "marker"), SA.x x, SA.y 0.0, SA.width 4.0, SA.height h]
 
 barWithHeight :: ∀ a. Number -> Number -> Number -> Number -> HTML a Action
 barWithHeight barWidth maxHeight barHeight xoffset = 
@@ -167,14 +206,19 @@ iterate count f x = cons x' (iterate (count - 1) f x')
 arrayMax :: ∀ a. Ord a => a -> Array a -> a
 arrayMax = foldr max
 
-    -- Just result -> HH.div 
-    --     [ HP.class_ (H.ClassName "results") ] 
-    --     [ HH.h2_ [ HH.text ("90% - " <> showTuple result.p90) ] 
-    --     , HH.h2_ [ HH.text ("95% - " <> showTuple result.p95) ] 
-    --     , HH.h2_ [ HH.text ("99% - " <> showTuple result.p99) ] 
-    --     , HH.h2_ [ HH.text ("99.9% - " <> showTuple result.p999) ] 
-    --     ]
-  
+arrayAppend :: ∀ a. Array a -> Array a -> Array a
+arrayAppend xs ys = case uncons ys of
+  Nothing -> xs
+  Just { head: h, tail: t } -> arrayAppend (snoc xs h) t
+
+riemannBound :: Number -> Array Number -> Number
+riemannBound x xs = case uncons xs of
+  Nothing -> 0.0
+  -- Just _ -> spy "riemanBound on x=" x -- TODO block this
+  Just { head: h, tail: t } -> if h < x 
+                               then 1.0 + riemannBound (x - h) t 
+                               else x / h
+
 inputDiv :: ∀ a. State -> HTML a Action
 inputDiv st = case st.result of 
   Just _ -> HH.div_ []
@@ -233,6 +277,13 @@ handleAction EditData = do
   H.modify_ (_ { result = Nothing })
   debug $ "returning to edit view"
 
+handleAction (ShowBars interval) = do
+  debug $ "ShowBars action called"
+  st <- H.get
+  -- TODO should just split out results into it's own component with its own state?
+  let result = (_ { showBars = Just interval } ) <$> st.result 
+  H.modify_ (_ { result = result })
+
 handleAction (Parse s) = do
     H.modify_ (_ { input = s, showError = false })
     case parse <<< stripInput $ s of
@@ -271,7 +322,8 @@ handleAction RunExperiments = do
                                                  , p90: p90val
                                                  , p95: p95val
                                                  , p99: p99val
-                                                 , p999: p999val },
+                                                 , p999: p999val 
+                                                 , showBars: Nothing },
                                    loading = false })
                     end <- H.liftEffect $ map toDateTime now
                     log $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
