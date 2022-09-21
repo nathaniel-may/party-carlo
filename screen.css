@@ -44,13 +44,26 @@ h1 {
     margin: auto;
 }
 
+.hcontainer {
+    display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+    display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+    display: -ms-flexbox;      /* TWEENER - IE 10 */
+    display: -webkit-flex;     /* NEW - Chrome */
+    display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
 .chart {
     width: 100%;
     max-height: 300px;
 }
 
 .bar {
-    fill: purple;
+    fill: #9CE4AD;
 }
 
 textarea {
@@ -74,7 +87,7 @@ button {
     margin-left: 5px;
     margin-right: 5px;
     margin-top: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     font-size: 16px;
     text-align: center;
     text-decoration: none;
@@ -88,6 +101,43 @@ button:disabled {
 
 button:focus {
     outline: 0;
+}
+
+.p {
+    background-color: grey;
+    color: white;
+    border: 1px solid #444;
+    width: 15%;
+    padding: 15px 15px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    white-space: pre;
+}
+
+#p90 {
+    background-color: #4AC7B4;
+    color: white;
+}
+
+#p95 {
+    background-color: #4E88CC;
+    color: white;
+}
+
+#p99 {
+    background-color: #665790;
+    color: white;
+}
+
+#p999 {
+    background-color: #394C66;
+    color: white;
 }
 
 .label {

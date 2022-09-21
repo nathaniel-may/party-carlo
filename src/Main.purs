@@ -130,7 +130,22 @@ resultsDiv st = case st.result of
       xoffsets = iterate (barCount) (_ + maxWidth / Int.toNumber barCount) 0.0
     in
       HH.div [ HP.class_ (H.ClassName "chart-div") ]
-        [ SE.svg [ SA.class_ (H.ClassName "chart"), SA.viewBox 0.0 0.0 maxWidth maxHeight, SA.preserveAspectRatio Nothing SA.Meet ] (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets) ]
+        [ SE.svg 
+          [ SA.class_ (H.ClassName "chart"), SA.viewBox 0.0 0.0 maxWidth maxHeight, SA.preserveAspectRatio Nothing SA.Meet ]
+          (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets) 
+        , HH.div [ HP.class_ (H.ClassName "hcontainer") ] 
+            [ HH.div
+            [ HP.class_ (H.ClassName "p"), HP.id "p90" ]
+            [ HH.text $ "p90\n" <> showTuple result.p90 ] 
+            , HH.div
+            [ HP.class_ (H.ClassName "p"), HP.id "p95" ]
+            [ HH.text $ "p95\n" <> showTuple result.p95 ] 
+            , HH.div
+            [ HP.class_ (H.ClassName "p"), HP.id "p99" ]
+            [ HH.text $ "p99\n" <> showTuple result.p99 ] 
+            , HH.div
+            [ HP.class_ (H.ClassName "p"), HP.id "p999" ]
+            [ HH.text $ "p99.9\n" <> showTuple result.p999 ] ] ]
 
 barWithHeight :: ∀ a. Number -> Number -> Number -> Number -> HTML a Action
 barWithHeight barWidth maxHeight barHeight xoffset = 
