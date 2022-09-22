@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Control.Monad.Error.Class (class MonadError, liftEither)
-import Data.Array (cons, length, filter, snoc, uncons, zip)
+import Data.Array (cons, filter, length, uncons, zip)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..), either)
@@ -143,7 +143,7 @@ resultsDiv st = case st.result of
       HH.div [ HP.class_ (H.ClassName "chart-div") ]
         [ SE.svg 
           [ SA.class_ (H.ClassName "chart"), SA.viewBox 0.0 0.0 maxWidth maxHeight, SA.preserveAspectRatio Nothing SA.Meet ]
-          (arrayAppend 
+          (append 
             (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets)
             (riemannBars maxHeight barWidth result.showBars heights))
         , HH.div [ HP.class_ (H.ClassName "hcontainer") ] 
@@ -206,21 +206,15 @@ iterate count f x = cons x' (iterate (count - 1) f x')
 arrayMax :: ∀ a. Ord a => a -> Array a -> a
 arrayMax = foldr max
 
-arrayAppend :: ∀ a. Array a -> Array a -> Array a
-arrayAppend xs ys = case uncons ys of
-  Nothing -> xs
-  Just { head: h, tail: t } -> arrayAppend (snoc xs h) t
-
 riemannBound :: Number -> Array Number -> Number
 riemannBound x xs = case uncons xs of
   Nothing -> 0.0
-  -- Just _ -> spy "riemanBound on x=" x -- TODO block this
   Just { head: h, tail: t } -> if h < x 
                                then 1.0 + riemannBound (x - h) t 
                                else x / h
 
 inputDiv :: ∀ a. State -> HTML a Action
-inputDiv st = case st.result of 
+inputDiv st = case st.result of
   Just _ -> HH.div_ []
   Nothing -> HH.textarea
     [ HP.disabled st.loading
@@ -240,7 +234,6 @@ errorDiv st = if not st.showError
       Left (InvalidProbability s _) -> s <> " is not a probability (between 0 and 1)"
     in 
       HH.text msg
-    
 
 render :: ∀ a. State -> HTML a Action
 render st =
