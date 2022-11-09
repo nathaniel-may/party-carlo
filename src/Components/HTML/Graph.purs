@@ -1,4 +1,4 @@
-module PartyCarlo.Components.Graph where
+module PartyCarlo.Components.HTML.Graph where
 
 import Prelude
 
@@ -20,11 +20,8 @@ import SortedArray (SortedArray)
 import SortedArray as SortedArray
 
 
-data Action 
-    = ShowBars Interval
-
-resultsDiv :: ∀ i. Maybe Result -> HTML i Action
-resultsDiv result = case result of
+graph :: ∀ i action. (Interval -> action) -> Maybe Result -> HTML i action
+graph f r = case r of
     Nothing -> HH.div_ []
     Just result -> let
       heights' = Int.toNumber <<< fst <$> (group result.dist)
@@ -46,25 +43,25 @@ resultsDiv result = case result of
             [ HH.div
             [ HP.class_ (H.ClassName "p")
             , HP.id "p90" 
-            , HE.onMouseOver (\_ -> ShowBars P90)]
+            , HE.onMouseOver (\_ -> f P90)]
             [ HH.text $ "p90\n" <> showTuple result.p90 ] 
             , HH.div
             [ HP.class_ (H.ClassName "p")
             , HP.id "p95" 
-            , HE.onMouseOver (\_ -> ShowBars P95) ]
+            , HE.onMouseOver (\_ -> f P95) ]
             [ HH.text $ "p95\n" <> showTuple result.p95 ] 
             , HH.div
             [ HP.class_ (H.ClassName "p")
             , HP.id "p99" 
-            , HE.onMouseOver (\_ -> ShowBars P99) ]
+            , HE.onMouseOver (\_ -> f P99) ]
             [ HH.text $ "p99\n" <> showTuple result.p99 ] 
             , HH.div
             [ HP.class_ (H.ClassName "p")
             , HP.id "p999" 
-            , HE.onMouseOver (\_ -> ShowBars P999) ]
+            , HE.onMouseOver (\_ -> f P999) ]
             [ HH.text $ "p99.9\n" <> showTuple result.p999 ] ] ]
 
-riemannBars :: ∀ a. Number -> Number -> Maybe Interval -> Array Number -> Array (HTML a Action)
+riemannBars :: ∀ a b. Number -> Number -> Maybe Interval -> Array Number -> Array (HTML a b)
 riemannBars h barWidth interval dist = let
     total = foldr (+) 0.0 dist
   in
@@ -79,10 +76,10 @@ riemannBars h barWidth interval dist = let
       Just P999 -> [ riemannBar (barWidth * (riemannBound (total * 0.001) dist)) h
                    , riemannBar (barWidth * (riemannBound (total - (total * 0.001)) dist)) h ]
 
-riemannBar :: ∀ a. Number -> Number -> HTML a Action
+riemannBar :: ∀ a b. Number -> Number -> HTML a b
 riemannBar x h =  SE.rect [SA.class_ (H.ClassName "marker"), SA.x x, SA.y 0.0, SA.width 4.0, SA.height h]
 
-barWithHeight :: ∀ a. Number -> Number -> Number -> Number -> HTML a Action
+barWithHeight :: ∀ a b. Number -> Number -> Number -> Number -> HTML a b
 barWithHeight barWidth maxHeight barHeight xoffset = 
   SE.rect [SA.class_ (H.ClassName "bar"), SA.x xoffset, SA.y (maxHeight - barHeight), SA.width barWidth, SA.height barHeight]
 

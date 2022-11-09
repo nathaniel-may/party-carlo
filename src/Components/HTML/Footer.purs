@@ -1,5 +1,5 @@
 -- | This module exports an HTML value so a consistent footer can be rendered throughout the app
-module PartyCarlo.Components.Footer where
+module PartyCarlo.Components.HTML.Footer where
 
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP

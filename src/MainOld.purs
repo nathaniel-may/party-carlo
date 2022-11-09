@@ -88,8 +88,8 @@ data Interval
   | P999
 
 data Error
-    = InvalidNumber String
-    | InvalidProbability String Number
+  = InvalidNumber String
+  | InvalidProbability String Number
 
 displayError :: Error -> String
 displayError (InvalidNumber s) = "Invalid Number '" <> show s <> "' "
