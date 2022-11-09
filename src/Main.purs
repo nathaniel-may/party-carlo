@@ -22,10 +22,12 @@ derive newtype instance monadAppM :: Monad AppM
 derive newtype instance monadEffectAppM :: MonadEffect AppM
 derive newtype instance monadAffAppM :: MonadAff AppM
 
-runAppM :: forall q i o. H.Component q i o AppM -> Aff (H.Component q i o Aff)
-runAppM (AppM x) = x
+-- runAppM :: forall q i o. H.Component q i o AppM -> Aff (H.Component q i o Aff)
+-- runAppM (AppM x) = x
 
 main :: Effect Unit
-main = runHalogenAff do
-  body <- awaitBody
-  runUI Router.component unit body
+main = pure unit
+-- main = runHalogenAff do
+--   body <- awaitBody
+--   runUI Router.component unit body
+
