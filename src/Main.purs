@@ -9,7 +9,7 @@ import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.Aff (awaitBody, runHalogenAff)
 import Halogen.VDom.Driver (runUI)
-import PartyCarlo.Components.Root as Root
+import PartyCarlo.Pages.Home as Home
 
 
 -- TODO model other effects like logging and randomization here
@@ -27,8 +27,6 @@ derive newtype instance monadAffAppM :: MonadAff AppM
 -- runAppM (AppM x) = x
 
 main :: Effect Unit
-main = pure unit
--- main = runHalogenAff do
---   body <- awaitBody
---   runUI Root.component unit body
-
+main = runHalogenAff do
+  body <- awaitBody
+  runUI Home.component unit body
