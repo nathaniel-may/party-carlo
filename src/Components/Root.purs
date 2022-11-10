@@ -40,7 +40,7 @@ module PartyCarlo.Components.Root where
 --   , profile :: OpaqueSlot Unit
 --   )
 
--- component:: ∀ query m. MonadAff m => H.Component query Unit Void m
+-- component :: ∀ query m. MonadAff m => H.Component query Unit Void m
 -- component = connect (selectEq _.currentUser) $ H.mkComponent
 --   { initialState: \{ context: currentUser } -> { route: Nothing, currentUser }
 --   , render
