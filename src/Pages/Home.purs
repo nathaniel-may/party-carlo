@@ -5,7 +5,7 @@ import Prelude
 import Data.Array (filter, length)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
-import Data.Either (Either(..), either)
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
 import Data.String as String
@@ -34,21 +34,20 @@ import SortedArray as SortedArray
 
 data Action 
     = ReceiveInput String
-    | RunExperiments
+    | PressButton
     | ShowBars Interval
-    | EditData
 
 -- | State is either Data or Results. These could be implemented as separate pages connected by routes,
 -- | but instead, this is a single page with two different sets of state.
 data State
   = Data
     { input :: String
-    , showError :: Boolean
-    , parsed :: Either Error (Array Probability)
+    , e :: Maybe Error
     }
   | Results
     { input :: String
     , dist :: Array Probability
+    -- to report failed experiments in the UI change from Maybe -> Either
     , result :: Maybe Result
     }
 
@@ -79,9 +78,8 @@ component = H.mkComponent
   where
   initialState :: Unit -> State
   initialState _ = Data 
-    { input : ""
-    , showError : false
-    , parsed : Right []
+    { input : ".1\n.99\n.5\n.5\n"
+    , e : Nothing
     }
 
   handleAction :: Action -> H.HalogenM State Action ChildSlots o m Unit
@@ -93,51 +91,59 @@ component = H.mkComponent
       -- otherwise just update the state
       Data st -> H.put (Data (st { input = s }))
 
-  handleAction RunExperiments = do
-    debug "run action initiated"
+  handleAction PressButton = do
+    debug "button pressed"
     state <- H.get
     case state of
+      Results st -> do
+        debug $ "returning to edit view"
+        H.put (Data { input: st.input, e: Nothing } )
       Data st -> do
+        debug "run action initiated"
         case parse <<< stripInput $ st.input of
             Left e -> do
               debug $ "parsing failed: " <> displayError e
-              H.put (Data (st { parsed = Left e }))
-            Right parsed -> do
-              debug $ "parsed " <> (show $ length parsed) <> " probabilities"
-              -- convert the state from Data -> Results now that we have a valid distribution
-              H.put (Results ( { input: st.input, dist: parsed, result: Nothing }))
-              -- now that we've updated the state, recurse once to conduct the experiments
-              handleAction RunExperiments
+              H.put (Data (st { e = Just e }))
+            Right dist -> do
+              debug $ "parsed " <> (show $ length dist) <> " probabilities"
+              log $ "running " <> show experimentCount <> " experiments ..."
+              start <- H.liftEffect $ map toDateTime now
+              samples <- H.liftEffect $ sample dist experimentCount
+              let sorted = SortedArray.fromArray samples
+              let m4 = ( 
+                  Tuple4 <$> confidenceInterval p90 sorted
+                  <*> confidenceInterval p95 sorted
+                  <*> confidenceInterval p99 sorted
+                  <*> confidenceInterval p999 sorted)
+              case m4 of
+                  Nothing -> do
+                      H.put (Results ( { input: st.input, dist: dist, result: Nothing }))
+                      error "confidence interval calculation failed"
+                  Just t4@(Tuple4 p90val p95val p99val p999val) -> do
+                      H.put (Results (
+                        { input: st.input
+                        , dist: dist
+                        , result: Just 
+                          { dist: sorted
+                          , p90: p90val
+                          , p95: p95val
+                          , p99: p99val
+                          , p999: p999val 
+                          , showBars: Nothing 
+                          }
+                        } ) )
+                      end <- H.liftEffect $ map toDateTime now
+                      log $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
+                      debug $ "result set: " <> (showTuple4 t4)
+
+  handleAction (ShowBars interval) = do
+    debug $ "ShowBars action called"
+    state <- H.get
+    case state of
+      Data _ -> pure unit  -- nothing to show in the data view
       Results st -> do
-        log $ "running " <> show experimentCount <> " experiments ..."
-        start <- H.liftEffect $ map toDateTime now
-        samples <- H.liftEffect $ sample st.dist experimentCount
-        let sorted = SortedArray.fromArray samples
-        let m4 = ( 
-            Tuple4 <$> confidenceInterval p90 sorted
-            <*> confidenceInterval p95 sorted
-            <*> confidenceInterval p99 sorted
-            <*> confidenceInterval p999 sorted)
-        case m4 of
-            Nothing -> do
-                -- TODO this kind of eats internal errors.
-                H.put (Results (st { result = Nothing }))
-                error "confidence interval calculation failed"
-            Just t4@(Tuple4 p90val p95val p99val p999val) -> do
-                H.put (Results (st { result = Just 
-                  { dist: sorted
-                  , p90: p90val
-                  , p95: p95val
-                  , p99: p99val
-                  , p999: p999val 
-                  , showBars: Nothing } } ) )
-                end <- H.liftEffect $ map toDateTime now
-                log $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
-                debug $ "result set: " <> (showTuple4 t4)
-
-  handleAction (ShowBars _) = error "show bars not implemented"
-
-  handleAction EditData = error "edit data not implemented"
+        let result = (_ { showBars = Just interval } ) <$> st.result
+        H.put (Results (st { result = result } ) )
       
   parse :: Array String -> Either Error (Array Probability)
   parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> input
@@ -153,12 +159,12 @@ component = H.mkComponent
     HH.div
       [ HP.class_ (H.ClassName "vcontainer") ]
       [ header
-      , button "Run" RunExperiments
+      , button "Run" PressButton
       , HH.p [HP.class_ (H.ClassName "pcenter")]
         [ HH.text "How many people do you expect to attend your party?" ]
       , HH.p_
         [ HH.text "Put in a probability for how likely it is for each person to attend and this will use Monte Carlo experiments to give you confidence intervals for what you think the group's attendance will be." ]
-      , HH.text $ either displayError (const "") st.parsed
+      , HH.text $ maybe "" displayError st.e
       , HH.textarea
         [ HP.disabled false
         , HP.id "input"
@@ -171,7 +177,7 @@ component = H.mkComponent
   render (Results st) = HH.div
     [ HP.class_ (H.ClassName "vcontainer") ]
     [ header
-    , button "Edit Data" RunExperiments
+    , button "Edit Data" PressButton
     , HH.h1_ [ HH.text case st.result of 
         Nothing -> "..."
         Just result -> show (fst result.p95) <> " - " <> show (snd result.p95)
