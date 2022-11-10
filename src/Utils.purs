@@ -6,6 +6,7 @@ import Control.Monad.Error.Class (class MonadError, liftEither)
 import Data.Either (Either(..), either)
 import Data.Maybe (Maybe, maybe)
 import Data.Tuple (Tuple(..))
+import Data.Number ((%))
 
 
 data Tuple4 a b c d = Tuple4 a b c d

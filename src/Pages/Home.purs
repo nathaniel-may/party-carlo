@@ -6,6 +6,8 @@ import Data.Array (filter, length)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..))
+import Data.Int (toNumber)
+import Data.Formatter.Number (format, Formatter(..))
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
 import Data.String as String
@@ -175,11 +177,24 @@ component = H.mkComponent
 
   render (Results st) = HH.div
     [ HP.class_ (H.ClassName "vcontainer") ]
-    [ header
-    , button "Edit Data" PressButton
-    , HH.h1_ [ HH.text $ show (fst st.result.p95) <> " - " <> show (snd st.result.p95) ]
-    , HH.p [ HP.class_ (H.ClassName "pcenter") ]
-    [ HH.text $ "You believe with 95% confidence that somewhere between " <> show (fst st.result.p95) <> " and " <> show (snd st.result.p95) <> " people will attend." ]
-    , graph ShowBars st.result
-    , footer
-    ]
+      [ header
+      , button "Edit Data" PressButton
+      , HH.h1_ [ HH.text $ show (fst st.result.p95) <> " - " <> show (snd st.result.p95) ]
+      , HH.p_
+        [ HH.text $ "After running " <> format commaIntFmt (toNumber experimentCount) <> " simulations of your party attendance, you are 95% confident that somewhere between " <> show (fst st.result.p95) <> " and " <> show (snd st.result.p95) <> " people will attend." ]
+      , HH.p_
+        [ HH.text "When interpreting these results, remember that this is only a representation of what you think, which is unrelated to the liklihood of people actually showing up. Unless the input data is derived from real-world samples, these numbers cannot reflect real-world behavior." ]
+      , HH.p_
+        [ HH.text "The chart below is your real sample data. Explore by hovering over the boxes below for other confidence intervals from 90% to 99.9%"]
+      , graph ShowBars st.result
+      , footer
+      ]
+
+  commaIntFmt :: Formatter
+  commaIntFmt = Formatter
+    { comma: true
+    , before: 0
+    , after: 0
+    , abbreviations: false
+    , sign: false
+    }
