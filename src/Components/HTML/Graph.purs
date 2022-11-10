@@ -20,46 +20,45 @@ import SortedArray (SortedArray)
 import SortedArray as SortedArray
 
 
-graph :: ∀ i action. (Interval -> action) -> Maybe Result -> HTML i action
-graph f r = case r of
-    Nothing -> HH.div_ []
-    Just result -> let
-      heights' = Int.toNumber <<< fst <$> (group result.dist)
-      maxHeight = 250.0
-      maxWidth = 700.0
-      barCount = length heights
-      barWidth = (maxWidth / Int.toNumber barCount) + 1.0
-      factor = maxHeight / arrayMax 0.0 heights'
-      heights = (factor * _) <$> heights'
-      xoffsets = iterate (barCount) (_ + maxWidth / Int.toNumber barCount) 0.0
-    in
-      HH.div [ HP.class_ (H.ClassName "chart-div") ]
-        [ SE.svg 
-          [ SA.class_ (H.ClassName "chart"), SA.viewBox 0.0 0.0 maxWidth maxHeight, SA.preserveAspectRatio Nothing SA.Meet ]
-          (append 
-            (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets)
-            (riemannBars maxHeight barWidth result.showBars heights))
-        , HH.div [ HP.class_ (H.ClassName "hcontainer") ] 
-            [ HH.div
-            [ HP.class_ (H.ClassName "p")
-            , HP.id "p90" 
-            , HE.onMouseOver (\_ -> f P90)]
-            [ HH.text $ "p90\n" <> showTuple result.p90 ] 
-            , HH.div
-            [ HP.class_ (H.ClassName "p")
-            , HP.id "p95" 
-            , HE.onMouseOver (\_ -> f P95) ]
-            [ HH.text $ "p95\n" <> showTuple result.p95 ] 
-            , HH.div
-            [ HP.class_ (H.ClassName "p")
-            , HP.id "p99" 
-            , HE.onMouseOver (\_ -> f P99) ]
-            [ HH.text $ "p99\n" <> showTuple result.p99 ] 
-            , HH.div
-            [ HP.class_ (H.ClassName "p")
-            , HP.id "p999" 
-            , HE.onMouseOver (\_ -> f P999) ]
-            [ HH.text $ "p99.9\n" <> showTuple result.p999 ] ] ]
+graph :: ∀ i action. (Interval -> action) -> Result -> HTML i action
+graph f result = 
+  let
+    heights' = Int.toNumber <<< fst <$> (group result.dist)
+    maxHeight = 250.0
+    maxWidth = 700.0
+    barCount = length heights
+    barWidth = (maxWidth / Int.toNumber barCount) + 1.0
+    factor = maxHeight / arrayMax 0.0 heights'
+    heights = (factor * _) <$> heights'
+    xoffsets = iterate (barCount) (_ + maxWidth / Int.toNumber barCount) 0.0
+  in
+    HH.div [ HP.class_ (H.ClassName "chart-div") ]
+      [ SE.svg 
+        [ SA.class_ (H.ClassName "chart"), SA.viewBox 0.0 0.0 maxWidth maxHeight, SA.preserveAspectRatio Nothing SA.Meet ]
+        (append 
+          (uncurry (barWithHeight barWidth maxHeight) <$> zip heights xoffsets)
+          (riemannBars maxHeight barWidth result.showBars heights))
+      , HH.div [ HP.class_ (H.ClassName "hcontainer") ] 
+          [ HH.div
+          [ HP.class_ (H.ClassName "p")
+          , HP.id "p90" 
+          , HE.onMouseOver (\_ -> f P90)]
+          [ HH.text $ "p90\n" <> showTuple result.p90 ] 
+          , HH.div
+          [ HP.class_ (H.ClassName "p")
+          , HP.id "p95" 
+          , HE.onMouseOver (\_ -> f P95) ]
+          [ HH.text $ "p95\n" <> showTuple result.p95 ] 
+          , HH.div
+          [ HP.class_ (H.ClassName "p")
+          , HP.id "p99" 
+          , HE.onMouseOver (\_ -> f P99) ]
+          [ HH.text $ "p99\n" <> showTuple result.p99 ] 
+          , HH.div
+          [ HP.class_ (H.ClassName "p")
+          , HP.id "p999" 
+          , HE.onMouseOver (\_ -> f P999) ]
+          [ HH.text $ "p99.9\n" <> showTuple result.p999 ] ] ]
 
 riemannBars :: ∀ a b. Number -> Number -> Maybe Interval -> Array Number -> Array (HTML a b)
 riemannBars h barWidth interval dist = let

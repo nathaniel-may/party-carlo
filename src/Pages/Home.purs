@@ -47,8 +47,7 @@ data State
   | Results
     { input :: String
     , dist :: Array Probability
-    -- to report failed experiments in the UI change from Maybe -> Either
-    , result :: Maybe Result
+    , result :: Result
     }
 
 type ChildSlots = (rawHtml :: OpaqueSlot Unit)
@@ -56,11 +55,13 @@ type ChildSlots = (rawHtml :: OpaqueSlot Unit)
 data Error
     = InvalidNumber String
     | InvalidProbability String Number
+    | ExperimentsFailed
 
 -- | string used to display the error value to the user (suitable for both UI and console logs)
 displayError :: Error -> String
 displayError (InvalidNumber s) = "\"" <> s <> "\"" <> " is not a number"
 displayError (InvalidProbability s _) = s <> " is not a probability (between 0 and 1)"
+displayError ExperimentsFailed = "experiments failed to run. copy your data, reload the page, and try again."
 
 experimentCount :: Int
 experimentCount = 100000
@@ -117,13 +118,13 @@ component = H.mkComponent
                   <*> confidenceInterval p999 sorted)
               case m4 of
                   Nothing -> do
-                      H.put (Results ( { input: st.input, dist: dist, result: Nothing }))
+                      H.put (Data ( { input: st.input, e: Just ExperimentsFailed }))
                       error "confidence interval calculation failed"
                   Just t4@(Tuple4 p90val p95val p99val p999val) -> do
                       H.put (Results (
                         { input: st.input
                         , dist: dist
-                        , result: Just 
+                        , result: 
                           { dist: sorted
                           , p90: p90val
                           , p95: p95val
@@ -141,9 +142,7 @@ component = H.mkComponent
     state <- H.get
     case state of
       Data _ -> pure unit  -- nothing to show in the data view
-      Results st -> do
-        let result = (_ { showBars = Just interval } ) <$> st.result
-        H.put (Results (st { result = result } ) )
+      Results st -> H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
       
   parse :: Array String -> Either Error (Array Probability)
   parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> input
@@ -178,15 +177,9 @@ component = H.mkComponent
     [ HP.class_ (H.ClassName "vcontainer") ]
     [ header
     , button "Edit Data" PressButton
-    , HH.h1_ [ HH.text case st.result of 
-        Nothing -> "..."
-        Just result -> show (fst result.p95) <> " - " <> show (snd result.p95)
-    ]
+    , HH.h1_ [ HH.text $ show (fst st.result.p95) <> " - " <> show (snd st.result.p95) ]
     , HH.p [ HP.class_ (H.ClassName "pcenter") ]
-    [ HH.text case st.result of 
-        Nothing -> "Running " <> show experimentCount <> "experiments..."
-        Just result -> "You believe with 95% confidence that somewhere between " <> show (fst result.p95) <> " and " <> show (snd result.p95) <> " people will attend."
-    ]
+    [ HH.text $ "You believe with 95% confidence that somewhere between " <> show (fst st.result.p95) <> " and " <> show (snd st.result.p95) <> " people will attend." ]
     , graph ShowBars st.result
     , footer
     ]
