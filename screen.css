@@ -187,16 +187,16 @@ a:hover {
 .lds-grid {
     display: inline-block;
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 128px;
+    height: 128px;
     margin-top: 330px;
     margin-bottom: 330px;
 }
 
 .lds-grid div {
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: #394C66;
     animation: lds-grid 1.2s linear infinite;
@@ -210,49 +210,49 @@ a:hover {
 
 .lds-grid div:nth-child(2) {
     top: 8px;
-    left: 32px;
+    left: 48px;
     animation-delay: -0.4s;
 }
 
 .lds-grid div:nth-child(3) {
     top: 8px;
-    left: 56px;
+    left: 88px;
     animation-delay: -0.8s;
 }
 
 .lds-grid div:nth-child(4) {
-    top: 32px;
+    top: 48px;
     left: 8px;
     animation-delay: -0.4s;
 }
 
 .lds-grid div:nth-child(5) {
-    top: 32px;
-    left: 32px;
+    top: 48px;
+    left: 48px;
     animation-delay: -0.8s;
 }
 
 .lds-grid div:nth-child(6) {
-    top: 32px;
-    left: 56px;
+    top: 48px;
+    left: 88px;
     animation-delay: -1.2s;
 }
 
 .lds-grid div:nth-child(7) {
-    top: 56px;
+    top: 88px;
     left: 8px;
     animation-delay: -0.8s;
 }
 
 .lds-grid div:nth-child(8) {
-    top: 56px;
-    left: 32px;
+    top: 88px;
+    left: 48px;
     animation-delay: -1.2s;
 }
 
 .lds-grid div:nth-child(9) {
-    top: 56px;
-    left: 56px;
+    top: 88px;
+    left: 88px;
     animation-delay: -1.6s;
 }
 
