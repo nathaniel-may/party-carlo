@@ -9,9 +9,9 @@ import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
-import MonteCarlo (Dist, monteCarloConfidenceInterval)
-import Probability (Probability)
-import Probability as Prob
+import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
+import PartyCarlo.Probability (Probability)
+import PartyCarlo.Probability as Prob
 import Test.QuickCheck (Result, quickCheck, (<?>))
 
 

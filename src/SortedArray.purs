@@ -1,4 +1,4 @@
-module SortedArray
+module PartyCarlo.SortedArray
   ( SortedArray
   , empty
   , filter

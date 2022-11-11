@@ -1,4 +1,4 @@
-module Probability (
+module PartyCarlo.Probability (
     Probability
   , p90
   , p95

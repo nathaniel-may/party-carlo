@@ -4,6 +4,7 @@ module PartyCarlo.Components.HTML.Footer where
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 
+
 footer :: forall i p. HH.HTML i p
 footer =
   HH.footer_

@@ -1,10 +1,9 @@
+-- | This module is used for common types used throughout the application.
 module PartyCarlo.Types where
-
-import Prelude
 
 import Data.Maybe (Maybe)
 import Data.Tuple (Tuple)
-import SortedArray (SortedArray)
+import PartyCarlo.SortedArray (SortedArray)
 
 
 data Interval

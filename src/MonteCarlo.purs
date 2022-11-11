@@ -1,4 +1,5 @@
-module MonteCarlo where
+-- | Module for running and reasoning about Monte Carlo experiments.
+module PartyCarlo.MonteCarlo where
 
 
 import Prelude
@@ -10,10 +11,10 @@ import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Random (randomRange)
-import Probability (Probability)
-import Probability as Prob
-import SortedArray (SortedArray, length, (!!))
-import SortedArray as SortedArray
+import PartyCarlo.Probability (Probability)
+import PartyCarlo.Probability as Prob
+import PartyCarlo.SortedArray (SortedArray, length, (!!))
+import PartyCarlo.SortedArray as SortedArray
 
 
 type Dist = Array Probability

@@ -22,16 +22,15 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Graph (graph)
 import PartyCarlo.Components.HTML.Header (header)
-import PartyCarlo.Components.Utils (OpaqueSlot)
+import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Types (Interval, Result)
 import PartyCarlo.Utils (mapLeft, showTuple4, Tuple4(..))
-import Probability (p90, p95, p99, p999, Probability, probability)
-import SortedArray as SortedArray
+import PartyCarlo.Probability (p90, p95, p99, p999, Probability, probability)
+import PartyCarlo.SortedArray as SortedArray
 
 
 data Action 
@@ -39,8 +38,8 @@ data Action
     | PressButton
     | ShowBars Interval
 
--- | State is either Data or Results. These could be implemented as separate pages connected by routes,
--- | but instead, this is a single page with two different sets of state.
+-- State is either Data or Results. These could be implemented as separate pages connected by routes,
+-- but instead, this is a single page with two different shapes for state.
 data State
   = Data
     { input :: String
@@ -51,8 +50,6 @@ data State
     , dist :: Array Probability
     , result :: Result
     }
-
-type ChildSlots = (rawHtml :: OpaqueSlot Unit)
 
 data Error
     = InvalidNumber String
@@ -69,7 +66,7 @@ experimentCount :: Int
 experimentCount = 100000
 
 component
-  :: forall q o m
+  :: ∀ q o m
    . MonadAff m
   => H.Component q Unit o m
 component = H.mkComponent
@@ -85,7 +82,7 @@ component = H.mkComponent
     , e : Nothing
     }
 
-  handleAction :: Action -> H.HalogenM State Action ChildSlots o m Unit
+  handleAction :: ∀ c. Action -> H.HalogenM State Action c o m Unit
   handleAction (ReceiveInput s) = do
     state <- H.get
     case state of
@@ -155,7 +152,7 @@ component = H.mkComponent
   stripInput :: String -> Array String
   stripInput s = filter (not String.null) $ String.trim <$> lines s
 
-  render :: State -> H.ComponentHTML Action ChildSlots m
+  render :: ∀ c. State -> H.ComponentHTML Action c m
   render (Data st) =
     HH.div
       [ HP.class_ (H.ClassName "vcontainer") ]
