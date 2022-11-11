@@ -162,7 +162,8 @@ component = H.mkComponent
         [ HH.text "How many people do you expect to attend your party?" ]
       , HH.p_
         [ HH.text "Put in a probability for how likely it is for each person to attend and this will use Monte Carlo experiments to give you confidence intervals for what you think the group's attendance will be." ]
-      , HH.text $ maybe "" displayError st.e
+      , HH.p [HP.class_ (H.ClassName "error")]
+        [ HH.text $ maybe "" displayError st.e ]
       , HH.textarea
         [ HP.disabled false
         , HP.id "input"
