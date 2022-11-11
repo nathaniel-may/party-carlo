@@ -6,15 +6,16 @@ import Data.Array (filter, length)
 import Data.DateTime (diff)
 import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..))
-import Data.Int (toNumber)
 import Data.Formatter.Number (format, Formatter(..))
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
 import Data.String as String
 import Data.String.Utils (lines)
-import Data.Time.Duration (Milliseconds)
+import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (sequence)
 import Data.Tuple (fst, snd)
+import Effect.Aff (delay)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class.Console (debug, error, log)
 import Effect.Now (now)
@@ -26,12 +27,13 @@ import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Graph (graph)
 import PartyCarlo.Components.HTML.Header (header)
+import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.Utils (css)
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
-import PartyCarlo.Types (Interval, Result)
-import PartyCarlo.Utils (mapLeft, showTuple4, Tuple4(..))
 import PartyCarlo.Probability (p90, p95, p99, p999, Probability, probability)
 import PartyCarlo.SortedArray as SortedArray
+import PartyCarlo.Types (Interval, Result)
+import PartyCarlo.Utils (mapLeft, showTuple4, Tuple4(..))
 
 
 data Action 
@@ -51,6 +53,7 @@ data State
     , dist :: Array Probability
     , result :: Result
     }
+  | Loading
 
 data Error
     = InvalidNumber String
@@ -89,6 +92,8 @@ component = H.mkComponent
     case state of
       -- there's nothing to do on the results view
       Results _ -> pure unit
+      -- there's nothing to do on the loading view
+      Loading -> pure unit
       -- otherwise just update the state
       Data st -> H.put (Data (st { input = s }))
 
@@ -96,6 +101,8 @@ component = H.mkComponent
     debug "button pressed"
     state <- H.get
     case state of
+      -- there's nothing to do on the loading view
+      Loading -> pure unit
       Results st -> do
         debug $ "returning to edit view"
         H.put (Data { input: st.input, e: Nothing } )
@@ -108,6 +115,8 @@ component = H.mkComponent
             Right dist -> do
               debug $ "parsed " <> (show $ length dist) <> " probabilities"
               log $ "running " <> show experimentCount <> " experiments ..."
+              H.put Loading
+              H.liftAff <<< delay $ Milliseconds 0.0
               start <- H.liftEffect $ map toDateTime now
               samples <- H.liftEffect $ sample dist experimentCount
               let sorted = SortedArray.fromArray samples
@@ -141,7 +150,10 @@ component = H.mkComponent
     debug $ "ShowBars action called"
     state <- H.get
     case state of
-      Data _ -> pure unit  -- nothing to show in the data view
+      -- there's nothing to do on the loading view
+      Loading -> pure unit
+      -- there's nothing to do on the data view
+      Data _ -> pure unit
       Results st -> H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
       
   parse :: Array String -> Either Error (Array Probability)
@@ -165,11 +177,17 @@ component = H.mkComponent
       , HH.p [ css "error" ]
         [ HH.text $ maybe "" displayError st.e ]
       , HH.textarea
-        [ HP.disabled false
-        , HP.id "input"
+        [ HP.id "input"
         , HP.value st.input
         , HE.onValueInput ReceiveInput
         ]
+      , footer
+      ]
+
+  render Loading =
+    HH.div [ css "vcontainer" ]
+      [ header
+      , loadingAnimation
       , footer
       ]
 

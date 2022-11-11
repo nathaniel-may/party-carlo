@@ -5,7 +5,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 
 
-footer :: forall i p. HH.HTML i p
+footer :: ∀ i p. HH.HTML i p
 footer =
   HH.footer_
     [ HH.text "PureScript + Netlify | Source on " 

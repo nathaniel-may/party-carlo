@@ -3,5 +3,5 @@ module PartyCarlo.Components.HTML.Header where
 
 import Halogen.HTML as HH
 
-header :: forall i p. HH.HTML i p
+header :: ∀ i p. HH.HTML i p
 header = HH.h1_ [ HH.text "Party Carlo" ]

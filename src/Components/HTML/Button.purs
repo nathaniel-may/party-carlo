@@ -6,7 +6,7 @@ import Halogen.HTML.Properties as HP
 
 
 -- | the provided action will be called on the button's click event
-button :: forall i action. String -> action -> HH.HTML i action
+button :: ∀ i action. String -> action -> HH.HTML i action
 button name a = HH.button
     [ HP.disabled false  -- TODO disable when loading
     , HP.id "RunExperiments"
