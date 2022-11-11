@@ -155,8 +155,7 @@ component = H.mkComponent
 
   render :: ∀ c. State -> H.ComponentHTML Action c m
   render (Data st) =
-    HH.div
-      [ css "vcontainer" ]
+    HH.div [ css "vcontainer" ]
       [ header
       , button "Run" PressButton
       , HH.p [ css "pcenter" ]
@@ -174,8 +173,8 @@ component = H.mkComponent
       , footer
       ]
 
-  render (Results st) = HH.div
-    [ css "vcontainer" ]
+  render (Results st) = 
+    HH.div [ css "vcontainer" ]
       [ header
       , button "Edit Data" PressButton
       , HH.h1_ [ HH.text $ show (fst st.result.p95) <> " - " <> show (snd st.result.p95) ]
