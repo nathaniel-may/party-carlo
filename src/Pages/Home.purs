@@ -26,6 +26,7 @@ import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Graph (graph)
 import PartyCarlo.Components.HTML.Header (header)
+import PartyCarlo.Components.HTML.Utils (css)
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Types (Interval, Result)
 import PartyCarlo.Utils (mapLeft, showTuple4, Tuple4(..))
@@ -155,14 +156,14 @@ component = H.mkComponent
   render :: ∀ c. State -> H.ComponentHTML Action c m
   render (Data st) =
     HH.div
-      [ HP.class_ (H.ClassName "vcontainer") ]
+      [ css "vcontainer" ]
       [ header
       , button "Run" PressButton
-      , HH.p [HP.class_ (H.ClassName "pcenter")]
+      , HH.p [ css "pcenter" ]
         [ HH.text "How many people do you expect to attend your party?" ]
       , HH.p_
         [ HH.text "Put in a probability for how likely it is for each person to attend and this will use Monte Carlo experiments to give you confidence intervals for what you think the group's attendance will be." ]
-      , HH.p [HP.class_ (H.ClassName "error")]
+      , HH.p [ css "error" ]
         [ HH.text $ maybe "" displayError st.e ]
       , HH.textarea
         [ HP.disabled false
@@ -174,7 +175,7 @@ component = H.mkComponent
       ]
 
   render (Results st) = HH.div
-    [ HP.class_ (H.ClassName "vcontainer") ]
+    [ css "vcontainer" ]
       [ header
       , button "Edit Data" PressButton
       , HH.h1_ [ HH.text $ show (fst st.result.p95) <> " - " <> show (snd st.result.p95) ]
