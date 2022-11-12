@@ -15,9 +15,9 @@ import Halogen.HTML.Properties as HP
 import Halogen.Svg.Attributes as SA
 import Halogen.Svg.Elements as SE
 import PartyCarlo.Data.Display (display)
+import PartyCarlo.Data.Result (Interval(..), Result)
 import PartyCarlo.SortedArray (SortedArray)
 import PartyCarlo.SortedArray as SortedArray
-import PartyCarlo.Types (Interval(..), Result)
 
 
 graph :: ∀ i action. (Interval -> action) -> Result -> HTML i action

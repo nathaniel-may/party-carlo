@@ -32,11 +32,11 @@ import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.Utils (css)
 import PartyCarlo.Data.Display (class Display, display)
 import PartyCarlo.Data.Log (LogLevel(..))
+import PartyCarlo.Data.Result (Interval, Result)
 import PartyCarlo.Data.Tuple4 (Tuple4(..))
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Probability (p90, p95, p99, p999, Probability, probability)
 import PartyCarlo.SortedArray as SortedArray
-import PartyCarlo.Types (Interval, Result)
 import PartyCarlo.Utils (mapLeft)
 
 
@@ -150,7 +150,7 @@ component = H.mkComponent
                         } ) )
                       end <- nowDateTime
                       -- TODO change show to display
-                      log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ":"
+                      log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ""
                       log Debug ("result set: " <> (display t4))
 
   handleAction (ShowBars interval) = do

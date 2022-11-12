@@ -46,7 +46,7 @@ instance displayInt :: Display Int where
     display = show
 
 instance displayMilliseconds :: Display Milliseconds where
-    display (Milliseconds n) = toStringWith (fixed 0) n
+    display (Milliseconds n) = toStringWith (fixed 0) n <> "ms"
 
 instance displayTuple :: (Display a, Display b) => Display (Tuple a b) where
     display (Tuple a b) = fold ["(", display a, ",", display b, ")"]

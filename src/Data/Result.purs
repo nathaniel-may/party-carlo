@@ -1,5 +1,5 @@
--- | This module is used for common types used throughout the application.
-module PartyCarlo.Types where
+-- | A type representing a distribution and concrete confidence intervals
+module PartyCarlo.Data.Result where
 
 import Data.Maybe (Maybe)
 import Data.Tuple (Tuple)
