@@ -1,11 +1,11 @@
 module PartyCarlo.Data.Probability (
     Probability
-  , p90
-  , p95
-  , p99
-  , p999
-  , probability
-  , toNumber
+    , p90
+    , p95
+    , p99
+    , p999
+    , probability
+    , toNumber
 ) where
 
 import Prelude
@@ -37,4 +37,4 @@ p999 :: Probability
 p999 = Probability 0.999
 
 instance arbProbability :: Arbitrary Probability where
-  arbitrary = Probability <$> (choose 0.0 1.0)
+    arbitrary = Probability <$> (choose 0.0 1.0)

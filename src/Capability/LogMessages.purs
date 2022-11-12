@@ -11,11 +11,11 @@ import PartyCarlo.Data.Log (LogLevel, Log, mkLog)
 
 
 class Monad m <= LogMessages m where
-  logMessage :: Log -> m Unit
+    logMessage :: Log -> m Unit
 
 -- | This instance lets us avoid having to use `lift` when we use these functions in a component.
 instance logMessagesHalogenM :: LogMessages m => LogMessages (HalogenM st act slots msg m) where
-  logMessage = lift <<< logMessage
+    logMessage = lift <<< logMessage
 
 -- | Log a message with a level
 log :: forall m. LogMessages m => Now m => LogLevel -> String -> m Unit

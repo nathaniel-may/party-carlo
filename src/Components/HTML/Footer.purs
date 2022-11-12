@@ -7,9 +7,9 @@ import Halogen.HTML.Properties as HP
 
 footer :: ∀ i p. HH.HTML i p
 footer =
-  HH.footer_
-    [ HH.text "PureScript + Netlify | Source on " 
-    , HH.a 
-        [ HP.href "https://github.com/nathaniel-may/party-carlo" ] 
-        [ HH.text "GitHub" ]
-    ]
+    HH.footer_
+        [ HH.text "PureScript + Netlify | Source on " 
+        , HH.a 
+            [ HP.href "https://github.com/nathaniel-may/party-carlo" ] 
+            [ HH.text "GitHub" ]
+        ]

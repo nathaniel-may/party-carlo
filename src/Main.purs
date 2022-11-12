@@ -12,8 +12,8 @@ import PartyCarlo.Store (Env(..))
 
 main :: Effect Unit
 main = runHalogenAff do
-  body <- awaitBody
-  -- TODO fork this value at compile time based on environment variables
-  let initialStore = { env : Dev }
-  root <- runProdM initialStore Home.component
-  runUI root unit body
+    body <- awaitBody
+    -- TODO fork this value at compile time based on environment variables
+    let initialStore = { env : Dev }
+    root <- runProdM initialStore Home.component
+    runUI root unit body

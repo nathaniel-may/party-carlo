@@ -21,8 +21,8 @@ type Dist = Array Probability
 
 monteCarloConfidenceInterval :: Probability -> Int -> Dist -> Effect (Maybe (Tuple Int Int))
 monteCarloConfidenceInterval p count dist = do
-  samples <- sample dist count
-  pure $ confidenceInterval p (SortedArray.fromArray samples)
+    samples <- sample dist count
+    pure $ confidenceInterval p (SortedArray.fromArray samples)
 
 confidenceInterval :: ∀ a. Ord a => Probability -> SortedArray a -> Maybe (Tuple a a)
 confidenceInterval p _ | Prob.toNumber p <= 0.5 = Nothing
