@@ -4,7 +4,7 @@ module PartyCarlo.Data.Result where
 import Data.Maybe (Maybe)
 import Data.Tuple (Tuple)
 import PartyCarlo.Data.Display (class Display)
-import PartyCarlo.SortedArray (SortedArray)
+import PartyCarlo.Data.SortedArray (SortedArray)
 
 
 data Interval

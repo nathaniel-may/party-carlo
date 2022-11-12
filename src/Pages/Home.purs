@@ -33,11 +33,11 @@ import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.Utils (css)
 import PartyCarlo.Data.Display (class Display, display)
 import PartyCarlo.Data.Log (LogLevel(..))
+import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, probability)
 import PartyCarlo.Data.Result (Interval, Result)
+import PartyCarlo.Data.SortedArray as SortedArray
 import PartyCarlo.Data.Tuple4 (Tuple4(..))
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
-import PartyCarlo.Probability (p90, p95, p99, p999, Probability, probability)
-import PartyCarlo.SortedArray as SortedArray
 import PartyCarlo.Utils (mapLeft)
 
 

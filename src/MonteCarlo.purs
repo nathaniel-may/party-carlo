@@ -11,10 +11,10 @@ import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Random (randomRange)
-import PartyCarlo.Probability (Probability)
-import PartyCarlo.Probability as Prob
-import PartyCarlo.SortedArray (SortedArray, length, (!!))
-import PartyCarlo.SortedArray as SortedArray
+import PartyCarlo.Data.Probability (Probability)
+import PartyCarlo.Data.Probability as Prob
+import PartyCarlo.Data.SortedArray (SortedArray, length, (!!))
+import PartyCarlo.Data.SortedArray as SortedArray
 
 
 type Dist = Array Probability

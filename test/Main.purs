@@ -10,8 +10,8 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
-import PartyCarlo.Probability (Probability)
-import PartyCarlo.Probability as Prob
+import PartyCarlo.Data.Probability (Probability)
+import PartyCarlo.Data.Probability as Prob
 import Test.QuickCheck (Result, quickCheck, (<?>))
 
 
