@@ -4,7 +4,6 @@ import Prelude
 
 import Data.Array (filter, length)
 import Data.DateTime (diff)
-import Data.DateTime.Instant (toDateTime)
 import Data.Either (Either(..))
 import Data.Formatter.Number (format, Formatter(..))
 import Data.Int (toNumber)
@@ -17,18 +16,19 @@ import Data.Traversable (sequence)
 import Data.Tuple (fst, snd)
 import Effect.Aff (delay)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class.Console (debug, error, log)
-import Effect.Now (now)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import PartyCarlo.Capability.LogMessages (class LogMessages, log)
+import PartyCarlo.Capability.Now (class Now, nowDateTime)
 import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Graph (graph)
 import PartyCarlo.Components.HTML.Header (header)
 import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.Utils (css)
+import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Probability (p90, p95, p99, p999, Probability, probability)
 import PartyCarlo.SortedArray as SortedArray
@@ -72,6 +72,8 @@ experimentCount = 100000
 component
   :: ∀ q o m
    . MonadAff m
+  => Now m
+  => LogMessages m
   => H.Component q Unit o m
 component = H.mkComponent
   { initialState
@@ -98,26 +100,26 @@ component = H.mkComponent
       Data st -> H.put (Data (st { input = s }))
 
   handleAction PressButton = do
-    debug "button pressed"
+    log Debug "button pressed"
     state <- H.get
     case state of
       -- there's nothing to do on the loading view
       Loading -> pure unit
       Results st -> do
-        debug $ "returning to edit view"
+        log Debug "returning to edit view"
         H.put (Data { input: st.input, e: Nothing } )
       Data st -> do
-        debug "run action initiated"
+        log Debug  "run action initiated"
         case parse <<< stripInput $ st.input of
             Left e -> do
-              debug $ "parsing failed: " <> displayError e
+              log Debug  $ "parsing failed: " <> displayError e
               H.put (Data (st { e = Just e }))
             Right dist -> do
-              debug $ "parsed " <> (show $ length dist) <> " probabilities"
-              log $ "running " <> show experimentCount <> " experiments ..."
+              log Debug  $ "parsed " <> (show $ length dist) <> " probabilities"
+              log Info  $ "running " <> show experimentCount <> " experiments ..."
               H.put Loading
               H.liftAff <<< delay $ Milliseconds 0.0
-              start <- H.liftEffect $ map toDateTime now
+              start <- nowDateTime
               samples <- H.liftEffect $ sample dist experimentCount
               let sorted = SortedArray.fromArray samples
               let m4 = ( 
@@ -128,7 +130,7 @@ component = H.mkComponent
               case m4 of
                   Nothing -> do
                       H.put (Data ( { input: st.input, e: Just ExperimentsFailed }))
-                      error "confidence interval calculation failed"
+                      log Error  "confidence interval calculation failed"
                   Just t4@(Tuple4 p90val p95val p99val p999val) -> do
                       H.put (Results (
                         { input: st.input
@@ -142,12 +144,13 @@ component = H.mkComponent
                           , showBars: Nothing 
                           }
                         } ) )
-                      end <- H.liftEffect $ map toDateTime now
-                      log $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
-                      debug $ "result set: " <> (showTuple4 t4)
+                      end <- nowDateTime
+                      -- TODO change show to display
+                      log Info $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
+                      log Debug ("result set: " <> (showTuple4 t4))
 
   handleAction (ShowBars interval) = do
-    debug $ "ShowBars action called"
+    log Debug "ShowBars action called"
     state <- H.get
     case state of
       -- there's nothing to do on the loading view
