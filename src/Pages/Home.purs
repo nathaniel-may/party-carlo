@@ -8,8 +8,6 @@ import Data.Array (filter, length)
 import Data.DateTime (diff)
 import Data.Either (Either(..))
 import Data.Foldable (fold)
-import Data.Formatter.Number (format, Formatter(..))
-import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
 import Data.String as String
@@ -120,8 +118,8 @@ component = H.mkComponent
                         log Debug  $ "parsing failed: " <> display e
                         H.put (Data (st { e = Just e }))
                     Right dist -> do
-                        log Debug  $ "parsed " <> (display $ length dist) <> " probabilities"
-                        log Info  $ "running " <> display experimentCount <> " experiments ..."
+                        log Info  $ "parsed probabilities for " <> (display $ length dist) <> " attendees"
+                        log Info  $ "running " <> display experimentCount <> " experiments"
                         H.put Loading
                         H.liftAff <<< delay $ Milliseconds 0.0
                         start <- nowDateTime
@@ -205,7 +203,7 @@ component = H.mkComponent
         , button "Edit Data" PressButton
         , HH.h1_ [ HH.text $ display (fst st.result.p95) <> " - " <> display (snd st.result.p95) ]
         , HH.p_
-            [ HH.text $ "After running " <> format commaIntFmt (toNumber experimentCount) <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
+            [ HH.text $ "After running " <> display experimentCount <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
         , HH.p_
             [ HH.text "When interpreting these results, remember that this is only a representation of what you think, which is unrelated to the liklihood of people actually showing up. Unless the input data is derived from real-world samples, these numbers cannot reflect real-world behavior." ]
         , HH.p_
@@ -213,12 +211,3 @@ component = H.mkComponent
         , graph ShowBars st.result
         , footer
         ]
-
-    commaIntFmt :: Formatter
-    commaIntFmt = Formatter
-        { comma: true
-        , before: 0
-        , after: 0
-        , abbreviations: false
-        , sign: false
-        }

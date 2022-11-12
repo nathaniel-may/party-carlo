@@ -3,8 +3,10 @@ module PartyCarlo.Data.Display where
 import Prelude
 
 import Data.DateTime (DateTime)
-import Data.Formatter.DateTime as FDT
 import Data.Foldable (fold)
+import Data.Formatter.DateTime as FDT
+import Data.Formatter.Number as FN
+import Data.Int (toNumber)
 import Data.List (fromFoldable)
 import Data.Number.Format (toStringWith, fixed)
 import Data.Time.Duration (Milliseconds(..))
@@ -43,7 +45,16 @@ instance displayDateTime :: Display DateTime where
         ]
 
 instance displayInt :: Display Int where
-    display = show
+    display = FN.format commaIntFmt <<< toNumber
+        where 
+            commaIntFmt :: FN.Formatter
+            commaIntFmt = FN.Formatter
+                { comma: true
+                , before: 0
+                , after: 0
+                , abbreviations: false
+                , sign: false
+                }
 
 instance displayMilliseconds :: Display Milliseconds where
     display (Milliseconds n) = toStringWith (fixed 0) n <> "ms"

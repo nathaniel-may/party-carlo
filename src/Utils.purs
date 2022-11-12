@@ -4,11 +4,8 @@ module PartyCarlo.Utils where
 import Prelude hiding (show)
 
 import Control.Monad.Error.Class (class MonadError, liftEither)
-import Data.Array (fold)
 import Data.Either (Either(..), either)
 import Data.Maybe (Maybe, maybe)
-import Data.Tuple (Tuple(..))
-import PartyCarlo.Data.Display (class Display, display)
 
 
 mapLeft :: ∀ a e' e. (e -> e') -> Either e a -> Either e' a
