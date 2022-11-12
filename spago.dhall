@@ -26,5 +26,9 @@
   , "tuples"
   ]
 , packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "test/**/*.purs" ]
+, sources =
+  [ "src/**/*.purs"
+  , "${if (((env:PARTYCARLO_PROD : Bool) ? False )) then ".env.prod.purs" else ".env.dev.purs"}"
+  , "test/**/*.purs"
+  ]
 }
