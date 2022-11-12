@@ -7,6 +7,7 @@ import Prelude hiding (show)
 import Data.Array (filter, length)
 import Data.DateTime (diff)
 import Data.Either (Either(..))
+import Data.Foldable (fold)
 import Data.Formatter.Number (format, Formatter(..))
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), maybe)
@@ -154,7 +155,7 @@ component = H.mkComponent
                       log Debug ("result set: " <> (display t4))
 
   handleAction (ShowBars interval) = do
-    log Debug "ShowBars action called"
+    log Debug $ fold ["showing bars for ", display interval , " inverval"]
     state <- H.get
     case state of
       -- there's nothing to do on the loading view

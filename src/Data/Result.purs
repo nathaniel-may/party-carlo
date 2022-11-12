@@ -3,6 +3,7 @@ module PartyCarlo.Data.Result where
 
 import Data.Maybe (Maybe)
 import Data.Tuple (Tuple)
+import PartyCarlo.Data.Display (class Display)
 import PartyCarlo.SortedArray (SortedArray)
 
 
@@ -11,6 +12,12 @@ data Interval
   | P95
   | P99
   | P999
+
+instance displayInterval :: Display Interval where
+  display P90 = "p90"
+  display P95 = "p95"
+  display P99 = "p99"
+  display P999 = "p99.9"
 
 type Result = 
   { dist :: SortedArray Int
