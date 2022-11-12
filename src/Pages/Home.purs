@@ -41,8 +41,8 @@ data Action
     | PressButton
     | ShowBars Interval
 
--- State is either Data or Results. These could be implemented as separate pages connected by routes,
--- but instead, this is a single page with two different shapes for state.
+-- State is represented as a sum type because the app is one page with different views
+-- rather than multiple pages with meaninfully separate urls
 data State
   = Data
     { input :: String
