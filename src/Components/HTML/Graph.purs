@@ -14,10 +14,10 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.Svg.Attributes as SA
 import Halogen.Svg.Elements as SE
-import PartyCarlo.Types (Interval(..), Result)
-import PartyCarlo.Utils (showTuple)
+import PartyCarlo.Data.Display (display)
 import PartyCarlo.SortedArray (SortedArray)
 import PartyCarlo.SortedArray as SortedArray
+import PartyCarlo.Types (Interval(..), Result)
 
 
 graph :: ∀ i action. (Interval -> action) -> Result -> HTML i action
@@ -43,22 +43,22 @@ graph f result =
           [ HP.class_ (H.ClassName "p")
           , HP.id "p90" 
           , HE.onMouseOver (\_ -> f P90)]
-          [ HH.text $ "p90\n" <> showTuple result.p90 ] 
+          [ HH.text $ "p90\n" <> display result.p90 ] 
           , HH.div
           [ HP.class_ (H.ClassName "p")
           , HP.id "p95" 
           , HE.onMouseOver (\_ -> f P95) ]
-          [ HH.text $ "p95\n" <> showTuple result.p95 ] 
+          [ HH.text $ "p95\n" <> display result.p95 ] 
           , HH.div
           [ HP.class_ (H.ClassName "p")
           , HP.id "p99" 
           , HE.onMouseOver (\_ -> f P99) ]
-          [ HH.text $ "p99\n" <> showTuple result.p99 ] 
+          [ HH.text $ "p99\n" <> display result.p99 ] 
           , HH.div
           [ HP.class_ (H.ClassName "p")
           , HP.id "p999" 
           , HE.onMouseOver (\_ -> f P999) ]
-          [ HH.text $ "p99.9\n" <> showTuple result.p999 ] ] ]
+          [ HH.text $ "p99.9\n" <> display result.p999 ] ] ]
 
 riemannBars :: ∀ a b. Number -> Number -> Maybe Interval -> Array Number -> Array (HTML a b)
 riemannBars h barWidth interval dist = let

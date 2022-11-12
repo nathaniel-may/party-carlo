@@ -12,6 +12,7 @@
   , "halogen-store"
   , "halogen-svg-elems"
   , "integers"
+  , "lists"
   , "maybe"
   , "now"
   , "numbers"

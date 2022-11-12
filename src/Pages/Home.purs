@@ -1,6 +1,8 @@
 module PartyCarlo.Pages.Home where
 
-import Prelude
+-- use display instead of show
+
+import Prelude hiding (show)
 
 import Data.Array (filter, length)
 import Data.DateTime (diff)
@@ -28,12 +30,14 @@ import PartyCarlo.Components.HTML.Graph (graph)
 import PartyCarlo.Components.HTML.Header (header)
 import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.Utils (css)
+import PartyCarlo.Data.Display (class Display, display)
 import PartyCarlo.Data.Log (LogLevel(..))
+import PartyCarlo.Data.Tuple4 (Tuple4(..))
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Probability (p90, p95, p99, p999, Probability, probability)
 import PartyCarlo.SortedArray as SortedArray
 import PartyCarlo.Types (Interval, Result)
-import PartyCarlo.Utils (mapLeft, showTuple4, Tuple4(..))
+import PartyCarlo.Utils (mapLeft)
 
 
 data Action 
@@ -61,10 +65,10 @@ data Error
     | ExperimentsFailed
 
 -- | string used to display the error value to the user (suitable for both UI and console logs)
-displayError :: Error -> String
-displayError (InvalidNumber s) = "\"" <> s <> "\"" <> " is not a number"
-displayError (InvalidProbability s _) = s <> " is not a probability (between 0 and 1)"
-displayError ExperimentsFailed = "experiments failed to run. copy your data, reload the page, and try again."
+instance displayError :: Display Error where
+  display (InvalidNumber s) = "\"" <> s <> "\"" <> " is not a number"
+  display (InvalidProbability s _) = s <> " is not a probability (between 0 and 1)"
+  display ExperimentsFailed = "experiments failed to run. copy your data, reload the page, and try again."
 
 experimentCount :: Int
 experimentCount = 100000
@@ -112,11 +116,11 @@ component = H.mkComponent
         log Debug  "run action initiated"
         case parse <<< stripInput $ st.input of
             Left e -> do
-              log Debug  $ "parsing failed: " <> displayError e
+              log Debug  $ "parsing failed: " <> display e
               H.put (Data (st { e = Just e }))
             Right dist -> do
-              log Debug  $ "parsed " <> (show $ length dist) <> " probabilities"
-              log Info  $ "running " <> show experimentCount <> " experiments ..."
+              log Debug  $ "parsed " <> (display $ length dist) <> " probabilities"
+              log Info  $ "running " <> display experimentCount <> " experiments ..."
               H.put Loading
               H.liftAff <<< delay $ Milliseconds 0.0
               start <- nowDateTime
@@ -146,8 +150,8 @@ component = H.mkComponent
                         } ) )
                       end <- nowDateTime
                       -- TODO change show to display
-                      log Info $ "result calculated in " <> show (diff end start :: Milliseconds) <> ":"
-                      log Debug ("result set: " <> (showTuple4 t4))
+                      log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ":"
+                      log Debug ("result set: " <> (display t4))
 
   handleAction (ShowBars interval) = do
     log Debug "ShowBars action called"
@@ -178,7 +182,7 @@ component = H.mkComponent
       , HH.p_
         [ HH.text "Put in a probability for how likely it is for each person to attend and this will use Monte Carlo experiments to give you confidence intervals for what you think the group's attendance will be." ]
       , HH.p [ css "error" ]
-        [ HH.text $ maybe "" displayError st.e ]
+        [ HH.text $ maybe "" display st.e ]
       , HH.textarea
         [ HP.id "input"
         , HP.value st.input
@@ -198,9 +202,9 @@ component = H.mkComponent
     HH.div [ css "vcontainer" ]
       [ header
       , button "Edit Data" PressButton
-      , HH.h1_ [ HH.text $ show (fst st.result.p95) <> " - " <> show (snd st.result.p95) ]
+      , HH.h1_ [ HH.text $ display (fst st.result.p95) <> " - " <> display (snd st.result.p95) ]
       , HH.p_
-        [ HH.text $ "After running " <> format commaIntFmt (toNumber experimentCount) <> " simulations of your party attendance, you are 95% confident that somewhere between " <> show (fst st.result.p95) <> " and " <> show (snd st.result.p95) <> " people will attend." ]
+        [ HH.text $ "After running " <> format commaIntFmt (toNumber experimentCount) <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
       , HH.p_
         [ HH.text "When interpreting these results, remember that this is only a representation of what you think, which is unrelated to the liklihood of people actually showing up. Unless the input data is derived from real-world samples, these numbers cannot reflect real-world behavior." ]
       , HH.p_
