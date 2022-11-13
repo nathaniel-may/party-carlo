@@ -1,11 +1,12 @@
 module PartyCarlo.Pages.Home where
 
 -- use display instead of show
+
 import Prelude hiding (show)
 
 import Data.Array (filter, length)
 import Data.DateTime (diff)
-import Data.Either (Either(..))
+import Data.Either (Either(..), note)
 import Data.Foldable (fold)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Number as Number
@@ -16,6 +17,7 @@ import Data.Traversable (sequence)
 import Data.Tuple (fst, snd)
 import Effect.Aff (delay)
 import Effect.Aff.Class (class MonadAff)
+import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -33,7 +35,6 @@ import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, probability)
 import PartyCarlo.Data.Result (Interval, Result)
 import PartyCarlo.Data.SortedArray as SortedArray
-import PartyCarlo.Data.Tuple4 (Tuple4(..))
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Utils (mapLeft)
 
@@ -114,7 +115,7 @@ component = H.mkComponent
                 log Debug  "run action initiated"
                 case parse <<< stripInput $ st.input of
                     Left e -> do
-                        log Debug  $ "parsing failed: " <> display e
+                        log Debug $ "parsing failed: " <> display e
                         H.put (Data (st { e = Just e }))
                     Right dist -> do
                         log Info  $ "parsed probabilities for " <> (display $ length dist) <> " attendees"
@@ -122,34 +123,20 @@ component = H.mkComponent
                         H.put Loading
                         H.liftAff <<< delay $ Milliseconds 0.0
                         start <- nowDateTime
-                        samples <- H.liftEffect $ sample dist experimentCount
-                        let sorted = SortedArray.fromArray samples
-                        let m4 = ( 
-                            Tuple4 <$> confidenceInterval p90 sorted
-                            <*> confidenceInterval p95 sorted
-                            <*> confidenceInterval p99 sorted
-                            <*> confidenceInterval p999 sorted)
-                        case m4 of
-                            Nothing -> do
-                                H.put (Data ( { input: st.input, e: Just ExperimentsFailed }))
+                        exp <- runExperiments dist
+                        case exp of
+                            Left e -> do
                                 log Error  "confidence interval calculation failed"
-                            Just t4@(Tuple4 p90val p95val p99val p999val) -> do
-                                H.put (Results (
+                                H.put ( Data ( { input: st.input, e: Just e } ) )
+                            Right r -> do
+                                H.put ( Results (
                                     { input: st.input
                                     , dist: dist
-                                    , result: 
-                                    { dist: sorted
-                                    , p90: p90val
-                                    , p95: p95val
-                                    , p99: p99val
-                                    , p999: p999val 
-                                    , showBars: Nothing 
-                                    }
+                                    , result: r 
                                     } ) )
                                 end <- nowDateTime
-                                -- TODO change show to display
                                 log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ""
-                                log Debug ("result set: " <> (display t4))
+                                log Debug $ fold ["result set: p90=", display r.p90, " p95=", display r.p95, " p99=", display r.p99, " p99.9=", display r.p999]
 
     handleAction (ShowBars interval) = do
         log Debug $ fold ["showing bars for ", display interval , " inverval"]
@@ -161,6 +148,23 @@ component = H.mkComponent
             Data _ -> pure unit
             Results st -> H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
         
+    runExperiments :: ∀ m'. MonadEffect m' => Array Probability -> m' (Either Error Result)
+    runExperiments dist = do
+        samples <- H.liftEffect $ sample dist experimentCount
+        let sorted = SortedArray.fromArray samples
+        let result = (\p90val p95val p99val p999val ->
+            { dist: sorted
+            , p90: p90val
+            , p95: p95val
+            , p99: p99val
+            , p999: p999val 
+            , showBars: Nothing 
+            }) <$> confidenceInterval  p90  sorted
+                <*> confidenceInterval p95  sorted
+                <*> confidenceInterval p99  sorted
+                <*> confidenceInterval p999 sorted
+        pure $ note ExperimentsFailed result
+
     parse :: Array String -> Either Error (Array Probability)
     parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> input
 
