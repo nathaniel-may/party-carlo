@@ -15,6 +15,7 @@ import PartyCarlo.Data.Probability as Prob
 import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
 import Test.QuickCheck (Result, quickCheck, (<?>))
 import Test.TestM (State, runTestM)
+import Test.Utils (showTuple)
 
 main :: Effect Unit
 main = void $ sequence allTests
@@ -47,6 +48,3 @@ test0' p dist = do
 -- dirty way to force the effect before passing to quickcheck
 test0 :: Probability -> Dist -> Result
 test0 p dist = unsafePerformEffect $ runTestM (test0' p dist) initialState
-
-showTuple :: ∀ a b. Show a => Show b => Tuple a b -> String
-showTuple (Tuple a b) = "(" <> show a <> ", " <> show b <> ")"
