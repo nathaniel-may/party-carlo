@@ -17,13 +17,13 @@ import Data.Traversable (sequence)
 import Data.Tuple (fst, snd)
 import Effect.Aff (delay)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import PartyCarlo.Capability.LogMessages (class LogMessages, log)
 import PartyCarlo.Capability.Now (class Now, nowDateTime)
+import PartyCarlo.Capability.RNG (class RNG)
 import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Graph (graph)
@@ -77,6 +77,7 @@ component
     . MonadAff m
     => Now m
     => LogMessages m
+    => RNG m
     => H.Component q Unit o m
 component = H.mkComponent
     { initialState
@@ -148,9 +149,9 @@ component = H.mkComponent
             Data _ -> pure unit
             Results st -> H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
         
-    runExperiments :: ∀ m'. MonadEffect m' => Array Probability -> m' (Either Error Result)
+    runExperiments :: ∀ m'. RNG m' => Array Probability -> m' (Either Error Result)
     runExperiments dist = do
-        samples <- H.liftEffect $ sample dist experimentCount
+        samples <- sample dist experimentCount
         let sorted = SortedArray.fromArray samples
         let result = (\p90val p95val p99val p999val ->
             { dist: sorted

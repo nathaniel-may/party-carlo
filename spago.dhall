@@ -24,6 +24,8 @@
   , "stringutils"
   , "transformers"
   , "tuples"
+  , "enums"
+  , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
 , sources =
