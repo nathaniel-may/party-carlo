@@ -13,18 +13,20 @@ import Data.Maybe (Maybe)
 import Data.Time.Duration (Seconds(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Console as Console
 import Effect.Random (randomRange)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.RNG (class RNG)
-import PartyCarlo.Data.Log as Log
+import PartyCarlo.Data.Log (Log)
 import Unsafe.Coerce (unsafeCoerce)
 
 
-type State = { timeCounter :: Int }
+type State = 
+    { timeCounter :: Int 
+    , logs :: Array Log
+    }
 
-newtype TestM a = TestM ( StateT State Effect a)
+newtype TestM a = TestM ( StateT State Effect a )
 
 runTestM :: ∀ a. TestM a -> State -> Effect a
 runTestM (TestM m) s = evalStateT m s
@@ -53,30 +55,30 @@ instance nowTestM :: Now TestM where
     now = do
         s <- get
         let seconds = Seconds (toNumber s.timeCounter)
-        modify_ \x -> { timeCounter : x.timeCounter + 1 }
+        modify_ \x -> ( x { timeCounter = x.timeCounter + 1 } )
         pure <<< fromDateTime <<< forceDateTime $ adjust seconds testTime
 
     nowDate = do
         s <- get
         let seconds = Seconds (toNumber s.timeCounter)
-        modify_ \x -> { timeCounter : x.timeCounter + 1 }
+        modify_ \x -> ( x { timeCounter = x.timeCounter + 1 } )
         pure <<< date <<< forceDateTime $ adjust seconds testTime
 
     nowTime = do
         s <- get
         let seconds = Seconds (toNumber s.timeCounter)
-        modify_ \x -> { timeCounter : x.timeCounter + 1 }
+        modify_ \x -> ( x { timeCounter = x.timeCounter + 1 } )
         pure <<< time <<< forceDateTime $ adjust seconds testTime
 
     nowDateTime = do
         s <- get
         let seconds = Seconds (toNumber s.timeCounter)
-        modify_ \x -> { timeCounter : x.timeCounter + 1 }
+        modify_ \x -> ( x { timeCounter = x.timeCounter + 1 } )
         pure <<< forceDateTime $ adjust seconds testTime
 
--- | log everything to the console
+-- | store logs in memory in the state monad so the log statements can be tested
 instance logMessagesTestM :: LogMessages TestM where
-    logMessage log = liftEffect <<< Console.log $ Log.humanString log
+    logMessage log = modify_ \s -> (s { logs = s.logs <> [log] })
 
 -- | normal rng
 instance rngTestM :: RNG TestM where

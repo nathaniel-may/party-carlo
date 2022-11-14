@@ -20,7 +20,10 @@ main :: Effect Unit
 main = void $ sequence allTests
 
 initialState :: State
-initialState = { timeCounter : 0 }
+initialState = 
+    { timeCounter : 0 
+    , logs : []
+    }
 
 allTests :: Array (Effect Unit)
 allTests = [ quickCheck test0 ]
