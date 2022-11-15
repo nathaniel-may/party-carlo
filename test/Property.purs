@@ -13,14 +13,9 @@ import PartyCarlo.Data.Probability (Probability)
 import PartyCarlo.Data.Probability as Prob
 import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
 import Test.QuickCheck (Result, quickCheck, (<?>))
-import Test.TestM (State, runTestM)
+import Test.TestM (runTestM, initialState)
 import Test.Utils (showTuple)
 
-initialState :: State
-initialState = 
-    { timeCounter : 0
-    , logs : []
-    }
 
 allTests :: Array (Effect Unit)
 allTests = [ quickCheck test0 ]
@@ -44,4 +39,4 @@ allTests = [ quickCheck test0 ]
 
     -- dirty way to force the effect before passing to quickcheck
     test0 :: Probability -> Dist -> Result
-    test0 p dist = unsafePerformEffect $ runTestM (test0' p dist) initialState
+    test0 p dist = unsafePerformEffect $ runTestM initialState (test0' p dist) 

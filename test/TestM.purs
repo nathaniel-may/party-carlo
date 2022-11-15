@@ -18,6 +18,8 @@ import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.RNG (class RNG)
 import PartyCarlo.Data.Log (Log)
+import Test.Assert as Assert
+import Test.Capability.Assert (class Assert)
 import Unsafe.Coerce (unsafeCoerce)
 
 
@@ -26,10 +28,16 @@ type State =
     , logs :: Array Log
     }
 
+initialState :: State
+initialState = 
+    { timeCounter : 0
+    , logs : []
+    }
+
 newtype TestM a = TestM ( StateT State Effect a )
 
-runTestM :: ∀ a. TestM a -> State -> Effect a
-runTestM (TestM m) s = evalStateT m s
+runTestM :: ∀ a. State -> TestM a -> Effect a
+runTestM s (TestM m)= evalStateT m s
 
 derive newtype instance functorTestM :: Functor TestM
 derive newtype instance applyTestM :: Apply TestM
@@ -83,3 +91,6 @@ instance logMessagesTestM :: LogMessages TestM where
 -- | normal rng
 instance rngTestM :: RNG TestM where
     rng = liftEffect $ randomRange 0.0 1.0
+
+instance assertTestM :: Assert TestM where
+    assertEqual msg vals = liftEffect (Assert.assertEqual' msg vals)
