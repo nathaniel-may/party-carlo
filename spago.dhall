@@ -2,10 +2,12 @@
 , dependencies =
   [ "aff"
   , "arrays"
+  , "assert"
   , "console"
   , "datetime"
   , "effect"
   , "either"
+  , "enums"
   , "foldable-traversable"
   , "formatters"
   , "halogen"
@@ -24,13 +26,14 @@
   , "stringutils"
   , "transformers"
   , "tuples"
-  , "enums"
   , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
 , sources =
   [ "src/**/*.purs"
-  , "${if (env:PARTYCARLO_PROD ? False) then ".env.prod.purs" else ".env.dev.purs"}"
+  , "${if    env:PARTYCARLO_PROD ? False
+       then  ".env.prod.purs"
+       else  ".env.dev.purs"}"
   , "test/**/*.purs"
   ]
 }
