@@ -18,6 +18,7 @@
   , "maybe"
   , "now"
   , "numbers"
+  , "parallel"
   , "prelude"
   , "quickcheck"
   , "random"
