@@ -1,7 +1,6 @@
 module PartyCarlo.Pages.Home where
 
 -- use display instead of show
-
 import Prelude hiding (show)
 
 import Control.Monad.State.Class (class MonadState)
