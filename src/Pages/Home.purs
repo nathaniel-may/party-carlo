@@ -94,7 +94,7 @@ component = H.mkComponent
         { input : ".1\n.99\n.5\n.5\n"
         , e : Nothing
         }
-    -- TODO put these back under the where clause to hide them and simplify type vars
+
     handleAction
         :: ∀ c
         . MonadAff m

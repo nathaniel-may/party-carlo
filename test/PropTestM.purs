@@ -24,5 +24,3 @@ derive newtype instance monadPropTestM :: MonadEffect PropTestM
 -- | normal rng
 instance rngTestM :: RNG PropTestM where
     rng = liftEffect $ randomRange 0.0 1.0
-
--- TODO add assert instance?
