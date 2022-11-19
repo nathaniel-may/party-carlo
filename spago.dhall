@@ -26,7 +26,6 @@
   , "stringutils"
   , "transformers"
   , "tuples"
-  , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
 , sources =
