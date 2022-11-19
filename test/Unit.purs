@@ -27,9 +27,6 @@ allTests
     => Array (m Unit)
 allTests = [test0]
 
-test1 :: forall m. Assert m => m Unit
-test1 = assertEqual "my custom dummy test" { actual: 3, expected: 3 }
-
 test0
     :: forall m
     . Assert m

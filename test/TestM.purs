@@ -10,7 +10,7 @@ import Data.DateTime (DateTime, adjust, date, time)
 import Data.DateTime.Instant (fromDate, fromDateTime, toDateTime)
 import Data.Enum (toEnum)
 import Data.Int (toNumber)
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Seconds(..))
 import Data.Tuple (Tuple)
 import Effect.Aff (Aff)
@@ -25,7 +25,6 @@ import PartyCarlo.Pages.Home as Home
 import Test.Assert as Assert
 import Test.Capability.Assert (class Assert)
 import Test.Capability.Metadata (class Metadata, getMeta, modifyMeta_)
-import Unsafe.Coerce (unsafeCoerce)
 
 
 
@@ -50,9 +49,11 @@ testTime = forceDateTime $ toDateTime <<< fromDate <$> do
     d <- toEnum 1
     exactDate y m d
 
--- | so the typechecker stays sane
+-- | will infinite loop if you give it a bad date
+-- | useful because all dates going through here are hard coded
 forceDateTime :: Maybe DateTime -> DateTime
-forceDateTime = unsafeCoerce
+forceDateTime (Just x) = x
+forceDateTime Nothing = forceDateTime Nothing
 
 -- | record for storing state specific to tests
 -- | intended for redirecting effects into pure values
