@@ -42,5 +42,5 @@ test0 = do
     Home.handleAction' (Home.Data { e : Nothing, input : ".5" }) Home.PressButton
     s <- getMeta
     -- assert time effect and log effects happened the correct number of times
-    assertEqual "time should have been called 3 times (once for log ts, twice for timing the action)" { actual: s.timeCounter, expected: 3 }
-    assertEqual "two log statements should have been made" { actual: length s.logs, expected: 2 }
+    assertEqual "the result should have been timed, so time should have been accessed two more times than the number of logs." { actual: s.timeCounter - (length s.logs), expected: 2 }
+    assertEqual "logged an unexpected number of times" { actual: length s.logs, expected: 6 }
