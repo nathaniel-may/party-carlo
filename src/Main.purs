@@ -17,4 +17,7 @@ main = runHalogenAff do
     -- if the production environment variable is present, the prod value will be included.
     let initialStore = { env : env }
     root <- runProdM initialStore Home.component
-    runUI root unit body
+    runUI root initialInput body
+
+initialInput :: String
+initialInput = ".1\n.99\n.5\n.5\n"

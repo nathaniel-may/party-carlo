@@ -80,7 +80,7 @@ component
     => Now m
     => RNG m
     => Sleep m
-    => H.Component q Unit o m
+    => H.Component q String o m
 component = H.mkComponent
     { initialState
     , render
@@ -89,10 +89,9 @@ component = H.mkComponent
     } 
     where
 
-    -- TODO change input type from unit to String
-    initialState :: Unit -> State
-    initialState _ = Data 
-        { input : ".1\n.99\n.5\n.5\n"
+    initialState :: String -> State
+    initialState s = Data 
+        { input : s
         , e : Nothing
         }
 
