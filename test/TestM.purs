@@ -20,12 +20,12 @@ import Effect.Random (randomRange)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (Log)
 import PartyCarlo.Pages.Home as Home
 import Test.Assert as Assert
 import Test.Capability.Assert (class Assert)
 import Test.Capability.Metadata (class Metadata, getMeta, modifyMeta_)
-
 
 
 newtype TestM a = TestM (StateT Home.State (StateT Meta Aff) a)
@@ -108,3 +108,7 @@ instance assertTestM :: Assert TestM where
 instance metadataTestM :: Metadata Meta TestM where
     meta :: forall a. (Meta -> Tuple a Meta) -> TestM a
     meta f = TestM (lift (StateT $ pure <<< f))
+
+-- | instance skips sleeping during tests
+instance sleepTestM :: Sleep TestM where
+    sleep _ = pure unit

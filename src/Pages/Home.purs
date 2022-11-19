@@ -16,7 +16,6 @@ import Data.String.Utils (lines)
 import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (sequence)
 import Data.Tuple (fst, snd)
-import Effect.Aff (delay)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
@@ -25,6 +24,7 @@ import Halogen.HTML.Properties as HP
 import PartyCarlo.Capability.LogMessages (class LogMessages, log)
 import PartyCarlo.Capability.Now (class Now, nowDateTime)
 import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Sleep (class Sleep, sleep)
 import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Graph (graph)
@@ -79,6 +79,7 @@ component
     => LogMessages m
     => Now m
     => RNG m
+    => Sleep m
     => H.Component q Unit o m
 component = H.mkComponent
     { initialState
@@ -101,6 +102,7 @@ component = H.mkComponent
         => LogMessages m 
         => Now m
         => RNG m
+        => Sleep m
         => Action 
         -> H.HalogenM State Action c o m Unit
     handleAction action = do
@@ -151,10 +153,10 @@ component = H.mkComponent
 -- | a testable breakout of the handleAction function for the component
 handleAction' 
     :: ∀ m
-    . MonadAff m
-    => LogMessages m 
+    . LogMessages m 
     => Now m
     => RNG m
+    => Sleep m
     => MonadState State m
     => State 
     -> Action
@@ -189,8 +191,7 @@ handleAction' (Data st) PressButton = do
             log Info  $ "parsed probabilities for " <> (display $ length dist) <> " attendees"
             log Info  $ "running " <> display experimentCount <> " experiments"
             H.put Loading
-            -- TODO make this a capability and remove MonadAff constraint?
-            H.liftAff <<< delay $ Milliseconds 0.0
+            sleep (Milliseconds 0.0)
             start <- nowDateTime
             exp <- runExperiments dist
             case exp of

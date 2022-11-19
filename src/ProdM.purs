@@ -2,8 +2,8 @@ module PartyCarlo.ProdM where
 
 import Prelude
 
-import Effect.Aff (Aff)
-import Effect.Aff.Class (class MonadAff)
+import Effect.Aff (Aff, delay)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console as Console
 import Effect.Now as Now
@@ -13,6 +13,7 @@ import Halogen.Store.Monad (class MonadStore, StoreT, getStore, runStoreT)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Log as Log
 import PartyCarlo.Store (Env(..))
@@ -36,18 +37,21 @@ derive newtype instance monadStoreProdM :: MonadStore Store.Action Store.Store P
 
 -- | gets current time from the system
 instance nowProdM :: Now ProdM where
-  now = liftEffect Now.now
-  nowDate = liftEffect Now.nowDate
-  nowTime = liftEffect Now.nowTime
-  nowDateTime = liftEffect Now.nowDateTime
+    now = liftEffect Now.now
+    nowDate = liftEffect Now.nowDate
+    nowTime = liftEffect Now.nowTime
+    nowDateTime = liftEffect Now.nowDateTime
 
 -- | logs messages to the console. could add sending to a log service as well here.
 instance logMessagesProdM :: LogMessages ProdM where
-  logMessage log = do
-    store <- getStore
-    case store.env, Log.level log of
-        Prod, Debug -> pure unit
-        _, _ -> liftEffect <<< Console.log $ Log.humanString log
+    logMessage log = do
+        store <- getStore
+        case store.env, Log.level log of
+            Prod, Debug -> pure unit
+            _, _ -> liftEffect <<< Console.log $ Log.humanString log
 
 instance rngProdM :: RNG ProdM where
     rng = liftEffect $ randomRange 0.0 1.0
+
+instance sleepProdM :: Sleep ProdM where
+    sleep = liftAff <<< delay

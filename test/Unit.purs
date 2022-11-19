@@ -5,10 +5,10 @@ import Prelude
 import Control.Monad.State.Class (class MonadState)
 import Data.Array (length)
 import Data.Maybe (Maybe(..))
-import Effect.Aff.Class (class MonadAff)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Pages.Home as Home
 import Test.Capability.Assert (class Assert, assertEqual)
 import Test.Capability.Metadata (class Metadata, getMeta)
@@ -19,7 +19,7 @@ allTests
     :: forall m
     . Assert m
     => Metadata TestM.Meta m
-    => MonadAff m
+    => Sleep m
     => LogMessages m 
     => Now m
     => RNG m
@@ -31,7 +31,7 @@ test0
     :: forall m
     . Assert m
     => Metadata TestM.Meta m
-    => MonadAff m
+    => Sleep m
     => LogMessages m 
     => Now m
     => RNG m
