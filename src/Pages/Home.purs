@@ -4,6 +4,7 @@ module PartyCarlo.Pages.Home where
 
 import Prelude hiding (show)
 
+import Control.Monad.State.Class (class MonadState)
 import Data.Array (filter, length)
 import Data.DateTime (diff)
 import Data.Either (Either(..), note)
@@ -75,8 +76,8 @@ experimentCount = 100000
 component
     :: ∀ q o m
     . MonadAff m
-    => Now m
     => LogMessages m
+    => Now m
     => RNG m
     => H.Component q Unit o m
 component = H.mkComponent
@@ -84,96 +85,27 @@ component = H.mkComponent
     , render
     , eval: H.mkEval $ H.defaultEval
         { handleAction = handleAction }
-    }
+    } 
     where
+
+    -- TODO change input type from unit to String
     initialState :: Unit -> State
     initialState _ = Data 
         { input : ".1\n.99\n.5\n.5\n"
         , e : Nothing
         }
-
-    handleAction :: ∀ c. Action -> H.HalogenM State Action c o m Unit
-    handleAction (ReceiveInput s) = do
+    -- TODO put these back under the where clause to hide them and simplify type vars
+    handleAction
+        :: ∀ c
+        . MonadAff m
+        => LogMessages m 
+        => Now m
+        => RNG m
+        => Action 
+        -> H.HalogenM State Action c o m Unit
+    handleAction action = do
         state <- H.get
-        case state of
-            -- there's nothing to do on the results view
-            Results _ -> pure unit
-            -- there's nothing to do on the loading view
-            Loading -> pure unit
-            -- otherwise just update the state
-            Data st -> H.put (Data (st { input = s }))
-
-    handleAction PressButton = do
-        log Debug "button pressed"
-        state <- H.get
-        case state of
-            -- there's nothing to do on the loading view
-            Loading -> pure unit
-            Results st -> do
-                log Debug "returning to edit view"
-                H.put (Data { input: st.input, e: Nothing } )
-            Data st -> do
-                log Debug  "run action initiated"
-                case parse <<< stripInput $ st.input of
-                    Left e -> do
-                        log Debug $ "parsing failed: " <> display e
-                        H.put (Data (st { e = Just e }))
-                    Right dist -> do
-                        log Info  $ "parsed probabilities for " <> (display $ length dist) <> " attendees"
-                        log Info  $ "running " <> display experimentCount <> " experiments"
-                        H.put Loading
-                        H.liftAff <<< delay $ Milliseconds 0.0
-                        start <- nowDateTime
-                        exp <- runExperiments dist
-                        case exp of
-                            Left e -> do
-                                log Error  "confidence interval calculation failed"
-                                H.put ( Data ( { input: st.input, e: Just e } ) )
-                            Right r -> do
-                                H.put ( Results (
-                                    { input: st.input
-                                    , dist: dist
-                                    , result: r 
-                                    } ) )
-                                end <- nowDateTime
-                                log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ""
-                                log Debug $ fold ["result set: p90=", display r.p90, " p95=", display r.p95, " p99=", display r.p99, " p99.9=", display r.p999]
-
-    handleAction (ShowBars interval) = do
-        log Debug $ fold ["showing bars for ", display interval , " inverval"]
-        state <- H.get
-        case state of
-            -- there's nothing to do on the loading view
-            Loading -> pure unit
-            -- there's nothing to do on the data view
-            Data _ -> pure unit
-            Results st -> H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
-        
-    runExperiments :: ∀ m'. RNG m' => Array Probability -> m' (Either Error Result)
-    runExperiments dist = do
-        samples <- sample dist experimentCount
-        let sorted = SortedArray.fromArray samples
-        let result = (\p90val p95val p99val p999val ->
-            { dist: sorted
-            , p90: p90val
-            , p95: p95val
-            , p99: p99val
-            , p999: p999val 
-            , showBars: Nothing 
-            }) <$> confidenceInterval  p90  sorted
-                <*> confidenceInterval p95  sorted
-                <*> confidenceInterval p99  sorted
-                <*> confidenceInterval p999 sorted
-        pure $ note ExperimentsFailed result
-
-    parse :: Array String -> Either Error (Array Probability)
-    parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> input
-
-    parseNum :: String -> Either Error Number
-    parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
-
-    stripInput :: String -> Array String
-    stripInput s = filter (not String.null) $ String.trim <$> lines s
+        handleAction' state action
 
     render :: ∀ c. State -> H.ComponentHTML Action c m
     render (Data st) =
@@ -215,3 +147,98 @@ component = H.mkComponent
         , graph ShowBars st.result
         , footer
         ]
+
+-- | a testable breakout of the handleAction function for the component
+handleAction' 
+    :: ∀ m
+    . MonadAff m
+    => LogMessages m 
+    => Now m
+    => RNG m
+    => MonadState State m
+    => State 
+    -> Action
+    -> m Unit
+-- if we get input on the input page, save it to the state
+handleAction' (Data st) (ReceiveInput s) =
+    H.put (Data (st { input = s }))
+
+-- nothing to do if we recieve input on the other states
+handleAction' _ (ReceiveInput _) = 
+    pure unit
+
+-- there's no button on the loading view
+handleAction' Loading PressButton = 
+    pure unit
+
+-- pressing the button on the results view sends you to the edit data view
+handleAction' (Results st) PressButton = do
+    log Debug "button pressed"
+    log Debug "returning to edit view"
+    H.put (Data { input: st.input, e: Nothing } )
+
+-- pressing the button on the data view will parse the input then run the experiments
+handleAction' (Data st) PressButton = do
+    log Debug "button pressed"
+    log Debug  "run action initiated"
+    case parse <<< stripInput $ st.input of
+        Left e -> do
+            log Debug $ "parsing failed: " <> display e
+            H.put (Data (st { e = Just e }))
+        Right dist -> do
+            log Info  $ "parsed probabilities for " <> (display $ length dist) <> " attendees"
+            log Info  $ "running " <> display experimentCount <> " experiments"
+            H.put Loading
+            -- TODO make this a capability and remove MonadAff constraint?
+            H.liftAff <<< delay $ Milliseconds 0.0
+            start <- nowDateTime
+            exp <- runExperiments dist
+            case exp of
+                Left e -> do
+                    log Error  "confidence interval calculation failed"
+                    H.put ( Data ( { input: st.input, e: Just e } ) )
+                Right r -> do
+                    H.put ( Results (
+                        { input: st.input
+                        , dist: dist
+                        , result: r 
+                        } ) )
+                    end <- nowDateTime
+                    log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ""
+                    log Debug $ fold ["result set: p90=", display r.p90, " p95=", display r.p95, " p99=", display r.p99, " p99.9=", display r.p999]
+
+-- show the vertical graph bars on the results view
+handleAction' (Results st) (ShowBars interval) = do
+    log Debug $ fold ["showing bars for ", display interval , " inverval"]
+    H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
+
+-- no bars to show on other views
+handleAction' _ (ShowBars _) = do
+    pure unit
+
+
+runExperiments :: ∀ m. RNG m => Array Probability -> m (Either Error Result)
+runExperiments dist = do
+    samples <- sample dist experimentCount
+    let sorted = SortedArray.fromArray samples
+    let result = (\p90val p95val p99val p999val ->
+        { dist: sorted
+        , p90: p90val
+        , p95: p95val
+        , p99: p99val
+        , p999: p999val 
+        , showBars: Nothing 
+        }) <$> confidenceInterval  p90  sorted
+            <*> confidenceInterval p95  sorted
+            <*> confidenceInterval p99  sorted
+            <*> confidenceInterval p999 sorted
+    pure $ note ExperimentsFailed result
+
+parse :: Array String -> Either Error (Array Probability)
+parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> input
+
+parseNum :: String -> Either Error Number
+parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
+
+stripInput :: String -> Array String
+stripInput s = filter (not String.null) $ String.trim <$> lines s

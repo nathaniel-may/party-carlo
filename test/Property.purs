@@ -12,8 +12,8 @@ import PartyCarlo.Capability.RNG (class RNG)
 import PartyCarlo.Data.Probability (Probability)
 import PartyCarlo.Data.Probability as Prob
 import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
+import Test.PropTestM (runPropTestM)
 import Test.QuickCheck (Result, quickCheck, (<?>))
-import Test.TestM (runTestM, initialState)
 import Test.Utils (showTuple)
 
 
@@ -39,4 +39,4 @@ allTests = [ quickCheck test0 ]
 
     -- dirty way to force the effect before passing to quickcheck
     test0 :: Probability -> Dist -> Result
-    test0 p dist = unsafePerformEffect $ runTestM initialState (test0' p dist) 
+    test0 p dist = unsafePerformEffect $ runPropTestM (test0' p dist)

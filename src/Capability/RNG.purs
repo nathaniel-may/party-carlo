@@ -6,7 +6,7 @@ import Prelude
 import Control.Monad.Trans.Class (lift)
 import Halogen (HalogenM)
 
-
+-- TODO add rngWithSeed for deterministic property testing
 class Monad m <= RNG m where
     rng :: m Number
 
