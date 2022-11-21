@@ -8,10 +8,11 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
-import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Data.Probability (Probability)
 import PartyCarlo.Data.Probability as Prob
 import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
+import Random.PseudoRandom (Seed)
 import Test.PropTestM (runPropTestM)
 import Test.QuickCheck (Result, quickCheck, (<?>))
 import Test.Utils (showTuple)
@@ -21,7 +22,7 @@ allTests :: Array (Effect Unit)
 allTests = [ quickCheck test0 ]
     where
 
-    test0' :: ∀ m. RNG m => Probability -> Dist -> m Result
+    test0' :: ∀ m. Pack Seed m => Probability -> Dist -> m Result
     test0' p dist = do
         let expectedValue = round (sum $ Prob.toNumber <$> dist)
         result <- monteCarloConfidenceInterval p 5000 dist

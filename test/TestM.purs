@@ -16,14 +16,13 @@ import Data.Tuple (Tuple)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Random (randomRange)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
-import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (Log)
 import PartyCarlo.Pages.Home as Home
-import Random.PseudoRandom (mkSeed, randomR)
+import Random.PseudoRandom (Seed, mkSeed)
 import Test.Assert as Assert
 import Test.Capability.Assert (class Assert)
 import Test.Capability.Metadata (class Metadata, getMeta, modifyMeta_)
@@ -61,12 +60,14 @@ forceDateTime Nothing = forceDateTime Nothing
 type Meta =
     { timeCounter :: Int 
     , logs :: Array Log
+    , seed :: Seed
     }
 
 initialMeta :: Meta
 initialMeta = 
     { timeCounter : 0
     , logs : []
+    , seed : mkSeed 1
     }
 
 -- | each time this is called, time progresses by exactly one second.
@@ -99,10 +100,9 @@ instance nowTestM :: Now TestM where
 instance logMessagesTestM :: LogMessages TestM where
     logMessage log = modifyMeta_ \s -> (s { logs = s.logs <> [log] })
 
--- | normal rng
-instance rngTestM :: RNG TestM where
-    rng = pure newVal 
-        where { newSeed, newVal } = randomR 0.0 1.0 (mkSeed 1)
+instance packSeedTestM :: Pack Seed TestM where
+    pack seed = modifyMeta_ (_ { seed = seed})
+    unpack = _.seed <$> getMeta
 
 instance assertTestM :: Assert TestM where
     assertEqual msg vals = liftEffect (Assert.assertEqual' msg vals)

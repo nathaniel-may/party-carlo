@@ -7,9 +7,10 @@ import Data.Array (length)
 import Data.Maybe (Maybe(..))
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
-import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Pages.Home as Home
+import Random.PseudoRandom (Seed)
 import Test.Capability.Assert (class Assert, assertEqual)
 import Test.Capability.Metadata (class Metadata, getMeta)
 import Test.TestM as TestM
@@ -22,7 +23,7 @@ allTests
     => Sleep m
     => LogMessages m 
     => Now m
-    => RNG m
+    => Pack Seed m
     => MonadState Home.State m
     => Array (m Unit)
 allTests = [test0]
@@ -34,7 +35,7 @@ test0
     => Sleep m
     => LogMessages m 
     => Now m
-    => RNG m
+    => Pack Seed m
     => MonadState Home.State m
     => m Unit
 test0 = do

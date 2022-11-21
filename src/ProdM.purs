@@ -11,13 +11,13 @@ import Halogen as H
 import Halogen.Store.Monad (class MonadStore, StoreT, getStore, runStoreT, updateStore)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
-import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Log as Log
 import PartyCarlo.Store (Env(..), Action(..))
 import PartyCarlo.Store as Store
-import Random.PseudoRandom (randomR)
+import Random.PseudoRandom (Seed)
 import Safe.Coerce (coerce)
 
 
@@ -50,12 +50,9 @@ instance logMessagesProdM :: LogMessages ProdM where
             Prod, Debug -> pure unit
             _, _ -> liftEffect <<< Console.log $ Log.humanString log
 
-instance rngProdM :: RNG ProdM where
-    rng = do
-        store <- getStore
-        let { newSeed, newVal } = randomR 0.0 1.0 store.seed
-        updateStore (NewSeed newSeed)
-        pure newVal
+instance packSeedProdM :: Pack Seed ProdM where
+    pack = updateStore <<< NewSeed
+    unpack = _.seed <$> getStore
 
 instance sleepProdM :: Sleep ProdM where
     sleep = liftAff <<< delay

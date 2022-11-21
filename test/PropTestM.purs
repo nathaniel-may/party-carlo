@@ -3,16 +3,19 @@ module Test.PropTestM where
 
 import Prelude
 
+import Control.Monad.State.Class (class MonadState, get, put)
+import Control.Monad.State.Trans (StateT, evalStateT)
 import Effect (Effect)
-import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Random (randomRange)
-import PartyCarlo.Capability.RNG (class RNG)
+import Effect.Class (class MonadEffect)
+import PartyCarlo.Capability.Pack (class Pack)
+import Random.PseudoRandom (Seed, mkSeed)
 
 
-newtype PropTestM a = PropTestM (Effect a)
+-- TODO run in Aff instead?
+newtype PropTestM a = PropTestM (StateT Seed Effect a)
 
 runPropTestM :: ∀ a. PropTestM a -> Effect a
-runPropTestM (PropTestM m) = m
+runPropTestM (PropTestM m) = evalStateT m (mkSeed 1)
 
 derive newtype instance functorTestM :: Functor PropTestM
 derive newtype instance applyTestM :: Apply PropTestM
@@ -20,7 +23,8 @@ derive newtype instance applicativeTestM :: Applicative PropTestM
 derive newtype instance bindTestM :: Bind PropTestM
 derive newtype instance monadTestM :: Monad PropTestM
 derive newtype instance monadPropTestM :: MonadEffect PropTestM
+derive newtype instance monadStateTestM :: MonadState Seed PropTestM
 
--- | normal rng
-instance rngTestM :: RNG PropTestM where
-    rng = liftEffect $ randomRange 0.0 1.0
+instance packSeedTestM :: Pack Seed PropTestM where
+    pack = put
+    unpack = get

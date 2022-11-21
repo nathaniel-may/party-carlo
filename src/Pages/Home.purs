@@ -1,6 +1,7 @@
 module PartyCarlo.Pages.Home where
 
 -- use display instead of show
+
 import Prelude hiding (show)
 
 import Control.Monad.State.Class (class MonadState)
@@ -22,7 +23,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import PartyCarlo.Capability.LogMessages (class LogMessages, log)
 import PartyCarlo.Capability.Now (class Now, nowDateTime)
-import PartyCarlo.Capability.RNG (class RNG)
+import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Capability.Sleep (class Sleep, sleep)
 import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
@@ -37,6 +38,7 @@ import PartyCarlo.Data.Result (Interval, Result)
 import PartyCarlo.Data.SortedArray as SortedArray
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Utils (mapLeft)
+import Random.PseudoRandom (Seed)
 
 
 data Action 
@@ -77,7 +79,7 @@ component
     . MonadAff m
     => LogMessages m
     => Now m
-    => RNG m
+    => Pack Seed m
     => Sleep m
     => H.Component q String o m
 component = H.mkComponent
@@ -99,7 +101,7 @@ component = H.mkComponent
         . MonadAff m
         => LogMessages m 
         => Now m
-        => RNG m
+        => Pack Seed m
         => Sleep m
         => Action 
         -> H.HalogenM State Action c o m Unit
@@ -153,7 +155,7 @@ handleAction'
     :: ∀ m
     . LogMessages m 
     => Now m
-    => RNG m
+    => Pack Seed m
     => Sleep m
     => MonadState State m
     => State 
@@ -216,7 +218,7 @@ handleAction' _ (ShowBars _) = do
     pure unit
 
 
-runExperiments :: ∀ m. RNG m => Array Probability -> m (Either Error Result)
+runExperiments :: ∀ m. Pack Seed m => Array Probability -> m (Either Error Result)
 runExperiments dist = do
     samples <- sample dist experimentCount
     let sorted = SortedArray.fromArray samples

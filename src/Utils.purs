@@ -9,6 +9,8 @@ import Data.Array as Array
 import Data.Either (Either(..), either)
 import Data.Maybe (Maybe, maybe)
 import Data.Traversable (sequence)
+import PartyCarlo.Capability.Pack (class Pack, pack, unpack)
+import Random.PseudoRandom (Seed, randomR)
 
 
 mapLeft :: ∀ a e' e. (e -> e') -> Either e a -> Either e' a
@@ -22,3 +24,10 @@ noteT e = liftEither <<< note e
 
 replicateM :: ∀ m a. Applicative m => Int -> m a -> m (Array a)
 replicateM n m = sequence (Array.replicate n m)
+
+rng :: ∀ m. Pack Seed m => m Number
+rng = do
+    seed <- unpack
+    let { newSeed, newVal } = randomR 0.0 1.0 seed
+    pack newSeed
+    pure newVal
