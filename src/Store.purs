@@ -3,18 +3,24 @@ module PartyCarlo.Store where
 
 import Prelude
 
+import Random.PseudoRandom (Seed)
 
--- | Indicates whether we are running in dev or prod
+
+-- | Indicates whether the app was built for dev or prod
 data Env = Dev | Prod
 
 derive instance eqLogLevel :: Eq Env
 derive instance ordLogLevel :: Ord Env
 
--- | Right now the store only has the environment but this could be extended to many more fields
-type Store = { env :: Env }
+type Store =
+    -- what env the app was compiled for
+    { env :: Env
+    -- what seed the rng should use
+    , seed :: Seed
+    }
 
--- | Dummy concrete action necessary for deriving typeclasses
-type Action = Void
+data Action
+    = NewSeed Seed
 
 -- | the store cannot change so the reducer is trivial
 reduce :: Store -> Action -> Store

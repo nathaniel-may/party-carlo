@@ -23,6 +23,7 @@ import PartyCarlo.Capability.RNG (class RNG)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (Log)
 import PartyCarlo.Pages.Home as Home
+import Random.PseudoRandom (mkSeed, randomR)
 import Test.Assert as Assert
 import Test.Capability.Assert (class Assert)
 import Test.Capability.Metadata (class Metadata, getMeta, modifyMeta_)
@@ -100,7 +101,8 @@ instance logMessagesTestM :: LogMessages TestM where
 
 -- | normal rng
 instance rngTestM :: RNG TestM where
-    rng = liftEffect $ randomRange 0.0 1.0
+    rng = pure newVal 
+        where { newSeed, newVal } = randomR 0.0 1.0 (mkSeed 1)
 
 instance assertTestM :: Assert TestM where
     assertEqual msg vals = liftEffect (Assert.assertEqual' msg vals)
