@@ -8,6 +8,7 @@ import Control.Monad.Trans.Class (lift)
 import Halogen (HalogenM)
 
 
+-- TODO replace Pack Seed m with Random m?
 class Monad m <= Pack v m where
     pack :: v -> m Unit
     unpack :: m v

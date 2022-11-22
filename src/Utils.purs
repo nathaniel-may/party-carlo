@@ -7,9 +7,11 @@ import Prelude hiding (show)
 import Control.Monad.Error.Class (class MonadError, liftEither)
 import Data.Array as Array
 import Data.Either (Either(..), either)
+import Data.Foldable (class Foldable, foldr)
 import Data.Maybe (Maybe, maybe)
 import Data.Traversable (sequence)
 import PartyCarlo.Capability.Pack (class Pack, pack, unpack)
+import PartyCarlo.Data.Probability (Probability, probability)
 import Random.PseudoRandom (Seed, randomR)
 
 
@@ -25,9 +27,22 @@ noteT e = liftEither <<< note e
 replicateM :: ∀ m a. Applicative m => Int -> m a -> m (Array a)
 replicateM n m = sequence (Array.replicate n m)
 
-rng :: ∀ m. Pack Seed m => m Number
+rng :: ∀ m. Pack Seed m => m Probability
 rng = do
     seed <- unpack
     let { newSeed, newVal } = randomR 0.0 1.0 seed
     pack newSeed
-    pure newVal
+    -- recurse if the random number is not a valid probability
+    -- (should never occur)
+    either (const rng) pure (probability newVal)
+
+rngs :: ∀ m. Pack Seed m => Int -> m (Array Probability)
+rngs n = replicateM n rng
+
+-- TODO change foldr -> foldl everywhere because PS is strict
+count :: ∀ t a. Foldable t => (a -> Boolean) -> t a -> Int
+count f = foldr (\x total -> if f x then total + 1 else total) 0
+
+-- | function wrapper for if statement
+if' :: ∀ a. Boolean -> a -> a -> a
+if' cond x y = if cond then x else y

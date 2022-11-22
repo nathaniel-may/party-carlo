@@ -15,8 +15,12 @@ import Test.QuickCheck.Arbitrary (class Arbitrary)
 import Test.QuickCheck.Gen (choose)
 
 
-data Probability = Probability Number
+newtype Probability = Probability Number
 
+derive newtype instance eqProbability :: Eq Probability
+derive newtype instance ordProbability :: Ord Probability
+
+-- TODO rename mkProbability
 probability :: Number -> Either Number Probability
 probability p = if p <= 1.0 && p >= 0.0 then Right (Probability p) else Left p
 

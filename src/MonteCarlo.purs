@@ -1,26 +1,26 @@
 -- | Module for running and reasoning about Monte Carlo experiments.
+-- TODO rewrite the module to be more portable by removing dependency on Pack type class
 module PartyCarlo.MonteCarlo where
 
 
 import Prelude
 
-import Data.Array as Array
+import Data.Foldable (foldM)
 import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
-import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Data.Probability (Probability)
 import PartyCarlo.Data.Probability as Prob
 import PartyCarlo.Data.SortedArray (SortedArray, length, (!!))
 import PartyCarlo.Data.SortedArray as SortedArray
-import PartyCarlo.Utils (replicateM, rng)
+import PartyCarlo.Utils (if', replicateM, rng)
 import Random.PseudoRandom (Seed)
 
 
 type Dist = Array Probability
 
-monteCarloConfidenceInterval :: ∀ m. Pack Seed m => Probability -> Int -> Dist -> m (Maybe (Tuple Int Int))
+monteCarloConfidenceInterval ::  ∀ m. Pack Seed m => Probability -> Int -> Dist -> m (Maybe (Tuple Int Int))
 monteCarloConfidenceInterval p count dist = do
     samples <- sample dist count
     pure $ confidenceInterval p (SortedArray.fromArray samples)
@@ -36,7 +36,4 @@ sample :: ∀ m. Pack Seed m => Dist -> Int -> m (Array Int)
 sample dist count = replicateM count (oneSample dist)
 
 oneSample :: ∀ m. Pack Seed m => Dist -> m Int
-oneSample dist = Array.length <<< Array.filter identity <$> traverse check dist
-
-check :: ∀ m. Pack Seed m => Probability -> m Boolean
-check p = (_ < Prob.toNumber p) <$> rng
+oneSample = foldM (\count d -> (\p -> (if' (p < d) (count + 1) count)) <$> rng) 0
