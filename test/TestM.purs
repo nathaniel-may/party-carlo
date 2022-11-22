@@ -70,38 +70,26 @@ initialMeta =
     , seed : mkSeed 1
     }
 
+progressTime :: TestM DateTime
+progressTime = do
+    meta <- getMeta
+    let seconds = Seconds (toNumber meta.timeCounter)
+    modifyMeta_ \s -> (s { timeCounter = s.timeCounter + 1 })
+    pure <<< forceDateTime $ adjust seconds testTime
+
 -- | each time this is called, time progresses by exactly one second.
 instance nowTestM :: Now TestM where
-    now = do
-        meta <- getMeta
-        let seconds = Seconds (toNumber meta.timeCounter)
-        modifyMeta_ \s -> (s { timeCounter = s.timeCounter + 1 })
-        pure <<< fromDateTime <<< forceDateTime $ adjust seconds testTime
-
-    nowDate = do
-        meta <- getMeta
-        let seconds = Seconds (toNumber meta.timeCounter)
-        modifyMeta_ \s -> (s { timeCounter = s.timeCounter + 1 })
-        pure <<< date <<< forceDateTime $ adjust seconds testTime
-
-    nowTime = do
-        meta <- getMeta
-        let seconds = Seconds (toNumber meta.timeCounter)
-        modifyMeta_ \s -> (s { timeCounter = s.timeCounter + 1 })
-        pure <<< time <<< forceDateTime $ adjust seconds testTime
-
-    nowDateTime = do
-        meta <- getMeta
-        let seconds = Seconds (toNumber meta.timeCounter)
-        modifyMeta_ \s -> (s { timeCounter = s.timeCounter + 1 })
-        pure <<< forceDateTime $ adjust seconds testTime
+    now = fromDateTime <$> progressTime
+    nowDate = date <$> progressTime
+    nowTime = time <$> progressTime
+    nowDateTime = progressTime
 
 -- | store logs in memory in the Store monad so the log statements can be tested
 instance logMessagesTestM :: LogMessages TestM where
     logMessage log = modifyMeta_ \s -> (s { logs = s.logs <> [log] })
 
 instance packSeedTestM :: Pack Seed TestM where
-    pack seed = modifyMeta_ (_ { seed = seed})
+    pack seed = modifyMeta_ (_ { seed = seed })
     unpack = _.seed <$> getMeta
 
 instance assertTestM :: Assert TestM where
