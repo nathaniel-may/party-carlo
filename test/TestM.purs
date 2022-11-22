@@ -105,6 +105,7 @@ instance packSeedTestM :: Pack Seed TestM where
     unpack = _.seed <$> getMeta
 
 instance assertTestM :: Assert TestM where
+    assert msg cond = liftEffect (Assert.assert' msg cond)
     assertEqual msg vals = liftEffect (Assert.assertEqual' msg vals)
 
 instance metadataTestM :: Metadata Meta TestM where
