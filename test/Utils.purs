@@ -8,9 +8,6 @@ import Random.PseudoRandom (Seed, mkSeed)
 import Test.QuickCheck.Arbitrary (class Arbitrary)
 import Test.QuickCheck.Gen (choose)
 
--- TODO can I delete this?
-showTuple :: ∀ a b. Show a => Show b => Tuple a b -> String
-showTuple (Tuple a b) = "(" <> show a <> ", " <> show b <> ")"
 
 -- | wrapper type for generating rng seeds in prop tests
 newtype SeedGen = SeedGen Seed

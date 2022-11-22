@@ -16,7 +16,7 @@ import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
 import Random.PseudoRandom (Seed)
 import Test.PropTestM (runPropTestM)
 import Test.QuickCheck (Result, quickCheck, (<?>))
-import Test.Utils (SeedGen(..), showTuple)
+import Test.Utils (SeedGen(..))
 
 
 allTests :: Array (Effect Unit)
@@ -40,7 +40,7 @@ allTests = quickCheck <$> [ test0 ]
                     Just ci@(Tuple low high) -> (low <= expectedValue && high >= expectedValue) 
                         <?> ("expected value was not inside the confidence interval: "
                         <> "ev=" <> show expectedValue 
-                        <> " ci=" <> showTuple ci
+                        <> " ci=" <> show ci
                         <> " p=" <> (show $ Prob.toNumber p)
                         <> " dist=" <> (show $ Prob.toNumber <$> dist)
                         <> " rngSeed=" <> (show seed))
