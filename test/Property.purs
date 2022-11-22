@@ -12,39 +12,35 @@ import Data.Ord (abs)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import PartyCarlo.Capability.Pack (class Pack)
-import PartyCarlo.Data.Probability (Probability)
+import PartyCarlo.Data.Probability (p999)
 import PartyCarlo.Data.Probability as Prob
 import PartyCarlo.MonteCarlo (Dist, monteCarloConfidenceInterval)
 import PartyCarlo.Utils (count, rngs)
 import Random.PseudoRandom (Seed)
 import Test.PropTestM (runPropTestM)
 import Test.QuickCheck (Result, quickCheck, (<?>))
-import Test.Utils (SeedGen(..))
+import Test.Utils (SeedGen(..), PracticalDist(..))
 
 
 allTests :: Array (Effect Unit)
-allTests = [ quickCheck test0, quickCheck test1 ]
+allTests = [ quickCheck test0, quickCheck test1, quickCheck test2 ]
     where
 
-    test0 :: SeedGen -> Probability -> Dist -> Result
-    test0 (SeedGen seed) p dist = runPropTestM test seed 
+    test0 :: SeedGen -> Dist -> Result
+    test0 (SeedGen seed) dist = runPropTestM test seed 
         where 
             test :: ∀ m. Pack Seed m => m Result
             test = do
                 let expectedValue = round (sum $ Prob.toNumber <$> dist)
-                -- if the number of runs is too low, the confidence interval is smaller than is should be
-                -- which causes this test to fail. from previous failing tests, 5000 is too small.
-                result <- monteCarloConfidenceInterval p 10000 dist
+                -- testing with the smallest confidence interval that's used in the UI
+                result <- monteCarloConfidenceInterval p999 5000 dist
                 pure $ case result of
-                    -- no values means the requested confidence interval was <= 0.5
-                    -- which would have otherwise flipped low > high values
-                    Nothing -> Prob.toNumber p <= 0.5 <?> "p > 0.5 but confidenceInterval returned Nothing."
+                    Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test0"
                     -- the expected value should be in the middle of the interval
                     Just ci@(Tuple low high) -> (low <= expectedValue && high >= expectedValue) 
                         <?> ("expected value was not inside the confidence interval: "
                         <> "ev=" <> show expectedValue 
                         <> " ci=" <> show ci
-                        <> " p=" <> (show $ Prob.toNumber p)
                         <> " dist=" <> (show $ Prob.toNumber <$> dist)
                         <> " rngSeed=" <> (show seed))
 
@@ -67,3 +63,18 @@ allTests = [ quickCheck test0, quickCheck test1 ]
                     <> show upper <> " were >= 0.5 which is above the threshold of a difference of "
                     <> show maxDiff)
 
+    test2 :: SeedGen -> PracticalDist -> Result
+    test2 (SeedGen seed) (PracticalDist dist) = runPropTestM test seed 
+        where 
+            test :: ∀ m. Pack Seed m => m Result
+            test = do
+                -- running less experiments is fine with a larger distribution
+                result <- monteCarloConfidenceInterval p999 100 dist
+                pure $ case result of
+                    Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test2"
+                    -- the two ends of the interval should not be the same
+                    Just ci@(Tuple low high) -> (low /= high) 
+                        <?> ("the two ends of the interval are the same when they should be different: "
+                        <> " ci=" <> show ci
+                        <> " dist=" <> (show $ Prob.toNumber <$> dist)
+                        <> " rngSeed=" <> (show seed))
