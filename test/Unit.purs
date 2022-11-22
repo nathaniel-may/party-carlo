@@ -61,7 +61,7 @@ test1 = case traverse (hush <<< probability) [0.1, 0.99, 0.5, 0.5] of
     Nothing -> 
         fail "probabilies failed to parse in test1"
     Just dist ->
-        monteCarloConfidenceInterval p95 100000 dist >>= case _ of
+        monteCarloConfidenceInterval p95 Home.experimentCount dist >>= case _ of
             Nothing -> fail "monte carlo methods failed for test1"
             Just (Tuple low high) -> assert 
                 "the size of the p95 confidence interval for the default input was zero" 
