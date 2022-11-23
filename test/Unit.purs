@@ -18,7 +18,7 @@ import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Probability (p95, probability)
 import PartyCarlo.MonteCarlo (monteCarloConfidenceInterval)
-import PartyCarlo.Pages.Home (State(..))
+import PartyCarlo.Pages.Home (Error(..), State(..))
 import PartyCarlo.Pages.Home as Home
 import Random.PseudoRandom (Seed)
 import Test.Capability.Assert (class Assert, assert, assertEqual, fail)
@@ -37,7 +37,7 @@ allTests
     => Pack Seed m
     => MonadState Home.State m
     => Array (m Unit)
-allTests = [test0, test1, test2]
+allTests = [test0, test1, test2, test3, test4]
 
 -- | test that time and logging effects are taking place a reasonable amount of times within the component's handleAction function
 test0
@@ -95,3 +95,48 @@ test2 = do
         Results { input: _, dist: _, result: r } -> case r.p95 of
             Tuple x y -> assert "the confidence interval for the default input should not be of size zero" (x /= y)
         _ -> assert "while testing the result of pressing the button, an unexpected state change occurred." false
+
+-- | test that bad input is handled properly when the button is pressed the component's handleAction function
+test3
+    :: forall m
+    . Assert m
+    => Metadata TestM.Meta m
+    => Sleep m
+    => LogMessages m 
+    => Now m
+    => Pack Seed m
+    => MonadState Home.State m
+    => m Unit
+test3 = do
+    let badInput = "bad input"
+    Home.handleAction' (Home.Data { e : Nothing, input : badInput }) Home.PressButton
+    get >>= case _ of
+        Data state ->
+            assert "pressing the button with a bad non-Number input should yeild an InvalidNumber error" (state.e == Just (InvalidNumber badInput))
+        Loading ->
+            fail $ "pressing the button with a bad input yielded the invalid state `Loading` in test 3"
+        Results _ ->
+            fail $ "pressing the button with a bad input yielded the invalid state `Results` in test 3"
+    
+-- | test that bad input is handled properly when the button is pressed the component's handleAction function
+test4
+    :: forall m
+    . Assert m
+    => Metadata TestM.Meta m
+    => Sleep m
+    => LogMessages m 
+    => Now m
+    => Pack Seed m
+    => MonadState Home.State m
+    => m Unit
+test4 = do
+    let badInput = "2"
+    Home.handleAction' (Home.Data { e : Nothing, input : badInput }) Home.PressButton
+    get >>= case _ of
+        Data state ->
+            assert "pressing the button with a bad Number input should yeild an InvalidProbability error" (state.e == Just (InvalidProbability badInput 2.0))
+        Loading ->
+            fail $ "pressing the button with a bad input yielded the invalid state `Loading` in test 4"
+        Results _ ->
+            fail $ "pressing the button with a bad input yielded the invalid state `Results` in test 4"
+    
