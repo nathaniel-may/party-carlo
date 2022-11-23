@@ -1,4 +1,8 @@
-module Test.Unit where
+-- | module for all unit tests
+module Test.Unit
+    -- exporting only the full array to get dead code warnings if written tests aren't in the array
+    (allTests) 
+    where
 
 import Prelude
 
@@ -22,6 +26,7 @@ import Test.Capability.Metadata (class Metadata, getMeta)
 import Test.TestM as TestM
 
 
+-- | array of all tests to run
 allTests
     :: forall m
     . Assert m
@@ -34,6 +39,7 @@ allTests
     => Array (m Unit)
 allTests = [test0, test1, test2]
 
+-- | test that time and logging effects are taking place a reasonable amount of times within the component's handleAction function
 test0
     :: forall m
     . Assert m
@@ -52,6 +58,8 @@ test0 = do
     assertEqual "the result should have been timed, so time should have been accessed two more times than the number of logs." { actual: s.timeCounter - (length s.logs), expected: 2 }
     assert "logged less than expected" (length s.logs >= 6)
 
+-- | test that the monte carlo library returns confidence intervals of size > 0.
+-- | this is useful for catching problems with the rng or seed storage
 test1
     :: forall m
     . Assert m
@@ -66,7 +74,9 @@ test1 = case traverse (hush <<< probability) [0.1, 0.99, 0.5, 0.5] of
             Just (Tuple low high) -> assert 
                 "the size of the p95 confidence interval for the default input was zero" 
                 (low /= high)
-    
+
+-- | test that the monte carlo library returns confidence intervals of size > 0 but within the handleAction function.
+-- | this is useful for catching problems with the rng or seed storage
 test2
     :: forall m
     . Assert m

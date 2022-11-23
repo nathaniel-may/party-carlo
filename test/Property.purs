@@ -1,6 +1,9 @@
 -- | property testing for the project.
--- | currently there is no monadic quickcheck library for purescript, so each test runs the test monad within the test
-module Test.Property where
+-- | currently there is no monadic quickcheck library for PureScript, so each test runs the test monad within the test
+module Test.Property
+    -- exporting only the full array to get dead code warnings if written tests aren't in the array
+    (allTests)
+    where
 
 import Prelude
 
@@ -22,59 +25,61 @@ import Test.QuickCheck (Result, quickCheck, (<?>))
 import Test.Utils (SeedGen(..), PracticalDist(..))
 
 
+-- | array of all tests to run
 allTests :: Array (Effect Unit)
 allTests = [ quickCheck test0, quickCheck test1, quickCheck test2 ]
-    where
 
-    test0 :: SeedGen -> Dist -> Result
-    test0 (SeedGen seed) dist = runPropTestM test seed 
-        where 
-            test :: ∀ m. Pack Seed m => m Result
-            test = do
-                let expectedValue = round (sum $ Prob.toNumber <$> dist)
-                -- testing with the smallest confidence interval that's used in the UI
-                result <- monteCarloConfidenceInterval p999 5000 dist
-                pure $ case result of
-                    Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test0"
-                    -- the expected value should be in the middle of the interval
-                    Just ci@(Tuple low high) -> (low <= expectedValue && high >= expectedValue) 
-                        <?> ("expected value was not inside the confidence interval: "
-                        <> "ev=" <> show expectedValue 
-                        <> " ci=" <> show ci
-                        <> " dist=" <> (show $ Prob.toNumber <$> dist)
-                        <> " rngSeed=" <> (show seed))
+-- | for every distribution, the naive expected value should be contained within the Monte Carlo p999 confidence interval
+test0 :: SeedGen -> Dist -> Result
+test0 (SeedGen seed) dist = runPropTestM test seed 
+    where 
+        test :: ∀ m. Pack Seed m => m Result
+        test = do
+            let expectedValue = round (sum $ Prob.toNumber <$> dist)
+            -- testing with the smallest confidence interval that's used in the UI
+            result <- monteCarloConfidenceInterval p999 5000 dist
+            pure $ case result of
+                Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test0"
+                -- the expected value should be in the middle of the interval
+                Just ci@(Tuple low high) -> (low <= expectedValue && high >= expectedValue) 
+                    <?> ("expected value was not inside the confidence interval: "
+                    <> "ev=" <> show expectedValue 
+                    <> " ci=" <> show ci
+                    <> " dist=" <> (show $ Prob.toNumber <$> dist)
+                    <> " rngSeed=" <> (show seed))
 
-    -- | a smoke test for if a mistake is made when swapping out the rng
-    test1 :: SeedGen -> Result
-    test1 (SeedGen seed) = runPropTestM test seed 
-        where 
-            test :: ∀ m. Pack Seed m => m Result
-            test = do
-                let n = 1000
-                let threshold = 0.1
-                xs <- rngs n
-                let lower = count (\x -> Prob.toNumber x < 0.5) xs
-                let upper = n - lower
-                let maxDiff = Int.toNumber n * threshold
-                pure $ (Int.toNumber $ abs (lower - upper)) < maxDiff
-                    <?> ("random number generator is generating lop-sided sequences. Out of "
-                    <> show n <> " generated probabilities " 
-                    <> show lower <> " were < 0.5 and "
-                    <> show upper <> " were >= 0.5 which is above the threshold of a difference of "
-                    <> show maxDiff)
+-- | for every generated set of 1000 probabilities, about half of them should be below 0.5
+-- | useful as a smoke test for if a mistake is made when swapping out the rng
+test1 :: SeedGen -> Result
+test1 (SeedGen seed) = runPropTestM test seed
+    where 
+        test :: ∀ m. Pack Seed m => m Result
+        test = do
+            let n = 1000
+            let threshold = 0.1
+            xs <- rngs n
+            let lower = count (\x -> Prob.toNumber x < 0.5) xs
+            let upper = n - lower
+            let maxDiff = Int.toNumber n * threshold
+            pure $ (Int.toNumber $ abs (lower - upper)) < maxDiff
+                <?> ("random number generator is generating lop-sided sequences. Out of "
+                <> show n <> " generated probabilities " 
+                <> show lower <> " were < 0.5 and "
+                <> show upper <> " were >= 0.5 which is above the threshold of a difference of "
+                <> show maxDiff)
 
-    test2 :: SeedGen -> PracticalDist -> Result
-    test2 (SeedGen seed) (PracticalDist dist) = runPropTestM test seed 
-        where 
-            test :: ∀ m. Pack Seed m => m Result
-            test = do
-                -- running less experiments is fine with a larger distribution
-                result <- monteCarloConfidenceInterval p999 100 dist
-                pure $ case result of
-                    Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test2"
-                    -- the two ends of the interval should not be the same
-                    Just ci@(Tuple low high) -> (low /= high) 
-                        <?> ("the two ends of the interval are the same when they should be different: "
-                        <> " ci=" <> show ci
-                        <> " dist=" <> (show $ Prob.toNumber <$> dist)
-                        <> " rngSeed=" <> (show seed))
+test2 :: SeedGen -> PracticalDist -> Result
+test2 (SeedGen seed) (PracticalDist dist) = runPropTestM test seed 
+    where 
+        test :: ∀ m. Pack Seed m => m Result
+        test = do
+            -- running less experiments is fine with a larger distribution
+            result <- monteCarloConfidenceInterval p999 100 dist
+            pure $ case result of
+                Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test2"
+                -- the two ends of the interval should not be the same
+                Just ci@(Tuple low high) -> (low /= high) 
+                    <?> ("the two ends of the interval are the same when they should be different: "
+                    <> " ci=" <> show ci
+                    <> " dist=" <> (show $ Prob.toNumber <$> dist)
+                    <> " rngSeed=" <> (show seed))

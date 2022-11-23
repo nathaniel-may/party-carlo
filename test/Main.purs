@@ -14,6 +14,7 @@ import Test.TestM (runTestM, initialMeta)
 import Test.Unit as Unit
 
 
+-- TODO separate out smoke tests and run them first
 main :: Effect Unit
 main = launchAff_ do
     void $ parTraverse (\m -> runTestM m initialMeta (Home.Data { input : "", e : Nothing })) Unit.allTests
