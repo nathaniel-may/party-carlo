@@ -22,6 +22,5 @@ type Store =
 data Action
     = NewSeed Seed
 
--- | the store cannot change so the reducer is trivial
 reduce :: Store -> Action -> Store
-reduce = const
+reduce store (NewSeed seed) = store { seed = seed }
