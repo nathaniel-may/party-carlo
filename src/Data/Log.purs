@@ -29,6 +29,7 @@ instance displayLog :: Display LogLevel where
     display Debug = "DEBUG"
 
 -- | simple structured log type
+-- TODO add well typed log events, and implement Display for them to keep all the strings in one place.
 newtype Log = Log
     { ts :: DateTime
     , level :: LogLevel

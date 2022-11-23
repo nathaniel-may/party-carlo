@@ -55,6 +55,7 @@ data State
     }
     | Results
     { input :: String
+    -- TODO I think we can safely remove dist since it never gets reused.
     , dist :: Array Probability
     , result :: Result
     }
@@ -189,6 +190,7 @@ handleAction' (Data st) PressButton = do
             H.put (Data (st { e = Just e }))
         Right dist -> do
             log Info  $ "parsed probabilities for " <> (display $ length dist) <> " attendees"
+            log Debug $ "parsed distribution: " <> display dist
             log Info  $ "running " <> display experimentCount <> " experiments"
             H.put Loading
             sleep (Milliseconds 0.0)

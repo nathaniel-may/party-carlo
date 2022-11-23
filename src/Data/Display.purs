@@ -2,15 +2,19 @@ module PartyCarlo.Data.Display where
 
 import Prelude
 
+import Data.Array as Array
 import Data.DateTime (DateTime)
 import Data.Foldable (fold)
 import Data.Formatter.DateTime as FDT
 import Data.Formatter.Number as FN
 import Data.Int (toNumber)
 import Data.List (fromFoldable)
+import Data.Maybe (fromMaybe)
 import Data.Number.Format (toStringWith, fixed)
 import Data.Time.Duration (Milliseconds(..))
 import Data.Tuple (Tuple(..))
+import PartyCarlo.Data.Probability (Probability)
+import PartyCarlo.Data.Probability as Prob
 
 
 -- | A type class for user-facing string representations.
@@ -61,3 +65,13 @@ instance displayMilliseconds :: Display Milliseconds where
 
 instance displayTuple :: (Display a, Display b) => Display (Tuple a b) where
     display (Tuple a b) = fold ["(", display a, ",", display b, ")"]
+
+instance displayProbability :: Display Probability where
+    display = display <<< Prob.toNumber
+
+instance displayNumber :: Display Number where
+    display = show
+
+instance displayArray :: Display a => Display (Array a) where
+    display xs = "[" <> elems <> "]"
+        where elems = fold $ fromMaybe [] (Array.init $ (\elem -> [display elem, ", "]) =<< xs)
