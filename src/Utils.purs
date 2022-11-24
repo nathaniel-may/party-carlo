@@ -7,10 +7,13 @@ import Prelude hiding (show)
 import Control.Monad.Error.Class (class MonadError, liftEither)
 import Data.Array as Array
 import Data.Either (Either(..), either)
+import Data.Enum (class BoundedEnum, pred, succ)
 import Data.Foldable (class Foldable, foldr)
-import Data.Maybe (Maybe, maybe)
+import Data.Maybe (Maybe, fromMaybe, maybe)
+import Data.String as String
 import Data.Traversable (sequence)
 import PartyCarlo.Capability.Pack (class Pack, pack, unpack)
+import PartyCarlo.Data.Display (class Display, display)
 import PartyCarlo.Data.Probability (Probability, probability)
 import Random.PseudoRandom (Seed, randomR)
 
@@ -46,3 +49,17 @@ count f = foldr (\x total -> if f x then total + 1 else total) 0
 -- | function wrapper for if statement
 if' :: ∀ a. Boolean -> a -> a -> a
 if' cond x y = if cond then x else y
+
+-- | for strings shorter than the length specified, the original is returned
+-- | for longer strings, it is truncated at the desired length with "..." appended.
+displayTrunc :: ∀ a. Display a => Int -> a ->  String
+displayTrunc n x = if substr == s then substr else substr <> "..."
+    where 
+        substr = String.take n s 
+        s = display x
+
+cycleUp :: ∀ a. BoundedEnum a => a -> a
+cycleUp x = fromMaybe bottom (succ x)
+
+cycleDown :: ∀ a. BoundedEnum a => a -> a
+cycleDown x = fromMaybe top (pred x)

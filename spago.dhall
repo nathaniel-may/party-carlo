@@ -13,7 +13,6 @@
   , "formatters"
   , "halogen"
   , "halogen-store"
-  , "halogen-svg-elems"
   , "integers"
   , "lists"
   , "maybe"

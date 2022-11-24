@@ -8,8 +8,9 @@ import Control.Monad.State.Class (class MonadState)
 import Data.Array (filter, length)
 import Data.DateTime (diff)
 import Data.Either (Either(..), note)
+import Data.Enum (pred, succ)
 import Data.Foldable (fold)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Number as Number
 import Data.String as String
 import Data.String.Utils (lines)
@@ -27,25 +28,27 @@ import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Capability.Sleep (class Sleep, sleep)
 import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
-import PartyCarlo.Components.HTML.Graph (graph)
-import PartyCarlo.Components.HTML.Header (header)
 import PartyCarlo.Components.HTML.Loading (loadingAnimation)
+import PartyCarlo.Components.HTML.ResultCircle (resultCircle)
 import PartyCarlo.Components.HTML.Utils (css)
 import PartyCarlo.Data.Display (class Display, display)
 import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, probability)
-import PartyCarlo.Data.Result (Interval, Result)
+import PartyCarlo.Data.Result (Interval(..), Result)
 import PartyCarlo.Data.SortedArray as SortedArray
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
-import PartyCarlo.Utils (mapLeft)
+import PartyCarlo.Utils (displayTrunc, mapLeft)
 import Random.PseudoRandom (Seed)
 
 
 data Action 
     = ReceiveInput String
-    | PressButton
+    | RunExperiments
+    | EditData
     | ShowBars Interval
     | ClearDefaultText
+    | ResultUp
+    | ResultDown
 
 -- State is represented as a sum type because the app is one page with different views
 -- rather than multiple pages with meaninfully separate urls
@@ -59,6 +62,7 @@ data State
     -- TODO I think we can safely remove dist since it never gets reused.
     , dist :: Array Probability
     , result :: Result
+    , show :: Interval
     }
     | Loading
 
@@ -72,18 +76,17 @@ derive instance eqError :: Eq Error
 
 -- | string used to display the error value to the user (suitable for both UI and console logs)
 instance displayError :: Display Error where
-    display (InvalidNumber s) = "\"" <> s <> "\"" <> " is not a number"
-    display (InvalidProbability s _) = s <> " is not a probability (between 0 and 1)"
+    display (InvalidNumber s) = "\"" <> displayTrunc 13 s <> "\"" <> " is not a number"
+    display (InvalidProbability s _) = displayTrunc 13 s <> " is not a probability (between 0 and 1)"
     display ExperimentsFailed = "experiments failed to run. copy your data, reload the page, and try again."
 
 experimentCount :: Int
 experimentCount = 100000
 
 defaultTextAreaValue :: String
-defaultTextAreaValue = "How many people do you expect to attend your party?\n\n"
-    <> "Put in a probability for how likely it is for each person to attend and this will use Monte Carlo experiments to give you confidence intervals for what you think the group's attendance will be.\n\n"
+defaultTextAreaValue = "Enter a list of probabilities: One for each attendee. Hit \"Run\" to get a confidence interval for overall attendance.\n\n"
     <> "ex.\n\n"
-    <> ".1\n.99\n.5\n.5\n"
+    <> ".1\n.99\n.5"
 
 component
     :: ∀ q o m
@@ -124,7 +127,6 @@ component = H.mkComponent
     render (Data st) =
         HH.div [ css "vcontainer" ]
         [ header
-        , button "Run" PressButton
         , HH.p [ css "error" ]
             [ HH.text $ maybe " " display st.e ]
         , HH.textarea
@@ -133,6 +135,7 @@ component = H.mkComponent
             , HE.onClick \_ -> ClearDefaultText
             , HE.onValueInput ReceiveInput
             ]
+        , button "Run" RunExperiments
         , footer
         ]
 
@@ -146,17 +149,38 @@ component = H.mkComponent
     render (Results st) = 
         HH.div [ css "vcontainer" ]
         [ header
-        , button "Edit Data" PressButton
-        , HH.h1_ [ HH.text $ display (fst st.result.p95) <> " - " <> display (snd st.result.p95) ]
-        , HH.p_
-            [ HH.text $ "After running " <> display experimentCount <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
-        , HH.p_
-            [ HH.text "When interpreting these results, remember that this is only a representation of what you think, which is unrelated to the liklihood of people actually showing up. Unless the input data is derived from real-world samples, these numbers cannot reflect real-world behavior." ]
-        , HH.p_
-            [ HH.text "The chart below is your real sample data. Explore by hovering over the boxes below for other confidence intervals from 90% to 99.9%"]
-        , graph ShowBars st.result
+        , HH.h2_ [ HH.text $ display (fst st.result.p95) <> " - " <> display (snd st.result.p95) ]
+        -- TODO move this text into an info view
+        -- , HH.p_
+        --     [ HH.text $ "After running " <> display experimentCount <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
+        -- , HH.p_
+        --     [ HH.text "When interpreting these results, remember that this is only a representation of what you think, which is unrelated to the liklihood of people actually showing up. Unless the input data is derived from real-world samples, these numbers cannot reflect real-world behavior." ]
+        -- , HH.p_
+        --     [ HH.text "The chart below is your real sample data. Explore by hovering over the boxes below for other confidence intervals from 90% to 99.9%"]
+        , resultCircle st.result st.show
+        , HH.div [ css "hcontainer" ]
+            [ HH.div 
+                [ css "toggle neon"
+                , HP.id "left" 
+                , HE.onClick \_ -> ResultDown
+                ]
+                [ HH.text "←" ]
+            , HH.div 
+                [ css "toggle neon"
+                , HP.id "right"
+                , HE.onClick \_ -> ResultUp
+                ]
+                [ HH.text "→" ]
+            ]
         , footer
         ]
+
+    header :: ∀ i. HH.HTML i Action
+    header = HH.h1 
+        [ css "neon"
+        , HE.onClick \_ -> EditData
+        ] 
+        [ HH.text "Party Carlo" ]
 
 -- | a testable breakout of the handleAction function for the component
 handleAction' 
@@ -170,33 +194,52 @@ handleAction'
     -> Action
     -> m Unit
 -- if we get input on the input page, save it to the state
-handleAction' (Data st) ClearDefaultText = do
-    H.put (Data (st { input = "" }))
+handleAction' (Data st) ClearDefaultText =
+    if st.input == defaultTextAreaValue
+    then H.put (Data (st { input = "" }))
+    else pure unit
 
 -- no default text to clear on any other view
 handleAction' _ ClearDefaultText =
     pure unit
 
--- if we get input on the input page, save it to the state
+-- view the next largest confidence interval
+handleAction' (Results st) ResultUp =
+    H.put (Results (st { show = fromMaybe st.show $ succ st.show }))
+
+-- view the next smallest confidence interval
+handleAction' (Results st) ResultDown =
+    H.put (Results (st { show = fromMaybe st.show $ pred st.show }))
+
+-- nothing to change outside the results view
+handleAction' _ ResultUp =
+    pure unit
+
+-- nothing to change outside the results view
+handleAction' _ ResultDown =
+    pure unit
+
+-- move to the edit data view from the results view
+handleAction' (Results st) EditData = do
+    log Debug "party carlo pressed"
+    log Debug "returning to edit view"
+    H.put (Data { e : Nothing, input : st.input })
+
+-- nothing to do on other views
+handleAction' _ EditData = do
+    log Debug "party carlo pressed"
+    pure unit
+
+-- if we get input on the input page, save it to the state and remove any displayed error
 handleAction' (Data st) (ReceiveInput s) =
-    H.put (Data (st { input = s }))
+    H.put (Data (st { e = Nothing, input = s }))
 
 -- nothing to do if we recieve input on the other states
 handleAction' _ (ReceiveInput _) = 
     pure unit
 
--- there's no button on the loading view
-handleAction' Loading PressButton = 
-    pure unit
-
--- pressing the button on the results view sends you to the edit data view
-handleAction' (Results st) PressButton = do
-    log Debug "button pressed"
-    log Debug "returning to edit view"
-    H.put (Data { input: st.input, e: Nothing } )
-
 -- pressing the button on the data view will parse the input then run the experiments
-handleAction' (Data st) PressButton = do
+handleAction' (Data st) RunExperiments = do
     log Debug "button pressed"
     log Debug  "run action initiated"
     case parse <<< stripInput $ st.input of
@@ -219,11 +262,16 @@ handleAction' (Data st) PressButton = do
                     H.put ( Results (
                         { input: st.input
                         , dist: dist
-                        , result: r 
+                        , result: r
+                        , show: P95
                         } ) )
                     end <- nowDateTime
                     log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ""
                     log Debug $ fold ["result set: p90=", display r.p90, " p95=", display r.p95, " p99=", display r.p99, " p99.9=", display r.p999]
+
+-- there's no button to run experiments on any other view
+handleAction' _ RunExperiments = 
+    pure unit
 
 -- show the vertical graph bars on the results view
 handleAction' (Results st) (ShowBars interval) = do
