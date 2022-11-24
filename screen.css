@@ -288,12 +288,15 @@ button:focus {
 .togglerow {
     margin-top: 60px;
     margin-bottom: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 .toggle {
+    font-size: 24px;
     border-radius: 50%;
-    width: 3rem;
-    height: 3rem;
+    width: 4rem;
+    height: 4rem;
     display: flex;
     align-items: center; 
     justify-content: center;
