@@ -49,10 +49,10 @@ instance boundedEnumInterval :: BoundedEnum Interval where
     fromEnum P999 = 3
 
 instance displayInterval :: Display Interval where
-    display P90 = "p90"
-    display P95 = "p95"
-    display P99 = "p99"
-    display P999 = "p99.9"
+    display P90 = "90%"
+    display P95 = "95%"
+    display P99 = "99%"
+    display P999 = "99.9%"
 
 type Result = 
     { dist :: SortedArray Int

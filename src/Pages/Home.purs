@@ -125,7 +125,7 @@ component = H.mkComponent
 
     render :: ∀ c. State -> H.ComponentHTML Action c m
     render (Data st) =
-        HH.div [ css "vcontainer" ]
+        HH.div [ HP.id "root", css "vcontainer" ]
         [ header
         , HH.p [ css "error" ]
             [ HH.text $ maybe " " display st.e ]
@@ -140,14 +140,14 @@ component = H.mkComponent
         ]
 
     render Loading =
-        HH.div [ css "vcontainer" ]
+        HH.div [ HP.id "root", css "vcontainer" ]
         [ header
         , loadingAnimation
         , footer
         ]
 
     render (Results st) = 
-        HH.div [ css "vcontainer" ]
+        HH.div [ HP.id "root", css "vcontainer" ]
         [ header
         , HH.h2_ [ HH.text $ display (fst st.result.p95) <> " - " <> display (snd st.result.p95) ]
         -- TODO move this text into an info view
@@ -158,15 +158,18 @@ component = H.mkComponent
         -- , HH.p_
         --     [ HH.text "The chart below is your real sample data. Explore by hovering over the boxes below for other confidence intervals from 90% to 99.9%"]
         , resultCircle st.result st.show
-        , HH.div [ css "hcontainer" ]
+        , HH.div [ css "hcontainer togglerow" ]
             [ HH.div 
-                [ css "toggle neon"
+                [ css "toggle neon noselect"
                 , HP.id "left" 
                 , HE.onClick \_ -> ResultDown
                 ]
                 [ HH.text "←" ]
+            , HH.div [ css "vcontainer showInterval" ]
+                [ HH.div_ [ HH.text $ display st.show ]
+                , HH.div_ [ HH.text "confidence" ] ]
             , HH.div 
-                [ css "toggle neon"
+                [ css "toggle neon noselect"
                 , HP.id "right"
                 , HE.onClick \_ -> ResultUp
                 ]

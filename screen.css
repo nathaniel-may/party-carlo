@@ -116,9 +116,12 @@ p {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin: auto;
+}
+
+#root.vcontainer {
     max-width: 400px;
     width: 400px;
-    margin: auto;
 }
 
 .hcontainer {
@@ -180,26 +183,6 @@ button {
     border-radius: 50%;
 }
 
-.toggle {
-    border-radius: 50%;
-    width: 3rem;
-    height: 3rem;
-    margin-top: 40px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center; 
-    justify-content: center;
-    text-align: center;
-}
-
-#left.toggle {
-    margin-right: 100px;
-}
-
-#right.toggle {
-    margin-left: 100px;
-}
-
 button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -230,7 +213,7 @@ button:focus {
     position: relative;
     border-radius: 50%;
     margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     font-size: 32px;
     background: transparent;
     display: flex;
@@ -300,6 +283,40 @@ button:focus {
 #p90, #p95, #p99, #p999 {
     width: 13rem;
     height: 13rem;
+}
+
+.togglerow {
+    margin-top: 60px;
+    margin-bottom: 20px;
+}
+
+.toggle {
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    text-align: center;
+}
+
+.showInterval {
+    color: white;
+    white-space: pre-wrap;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 50%;
+}
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Old versions of Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
 }
 
 .label {
