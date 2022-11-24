@@ -240,7 +240,7 @@ button:focus {
 }
 
 #p90.resultCircle:before {
-    background-color: hsl(189, 87%, 51%);
+    border: 13px solid hsl(189, 87%, 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -248,12 +248,12 @@ button:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    filter: blur(40px);
+    filter: blur(12px);
     z-index:0;
 }
 
 #p95.resultCircle:before {
-    background-color: hsl(189, 87%, 51%);
+    border: 13px solid hsl(189, 87%, 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -261,12 +261,12 @@ button:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    filter: blur(19px);
+    filter: blur(7px);
     z-index:0;
 }
 
 #p99.resultCircle:before {
-    background-color: hsl(189, 87%, 51%);
+    border: 13px solid hsl(189, 87%, 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -274,12 +274,12 @@ button:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    filter: blur(11px);
+    filter: blur(4px);
     z-index:0;
 }
 
 #p999.resultCircle:before {
-    background-color: hsl(189, 87%, 51%);
+    border: 13px solid hsl(189, 87%, 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -287,7 +287,7 @@ button:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    filter: blur(6px);
+    filter: blur(2px);
     z-index:0;
 }
 
