@@ -137,20 +137,6 @@ p {
     width: 100%;
 }
 
-.chart {
-    width: 100%;
-    max-height: 300px;
-    margin-top: 20px;
-}
-
-.bar {
-    fill: #F2CEE6;
-}
-
-.marker {
-    fill: #394C66
-}
-
 textarea {
     width: 80%;
     height: 300px;
@@ -288,8 +274,7 @@ button:focus {
 .togglerow {
     margin-top: 60px;
     margin-bottom: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
+    width: 80%
 }
 
 .toggle {
