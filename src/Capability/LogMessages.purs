@@ -5,9 +5,10 @@ module PartyCarlo.Capability.LogMessages where
 import Prelude
 
 import Control.Monad.Trans.Class (lift)
+import Debug (class DebugWarning)
 import Halogen (HalogenM)
 import PartyCarlo.Capability.Now (class Now)
-import PartyCarlo.Data.Log (LogLevel, Log, mkLog)
+import PartyCarlo.Data.Log (LogLevel(..), Log, mkLog)
 
 
 class Monad m <= LogMessages m where
@@ -20,3 +21,6 @@ instance logMessagesHalogenM :: LogMessages m => LogMessages (HalogenM st act sl
 -- | Log a message with a level
 log :: forall m. LogMessages m => Now m => LogLevel -> String -> m Unit
 log reason = logMessage <=< mkLog reason
+
+logDev :: forall m. LogMessages m => DebugWarning => Now m => String -> m Unit
+logDev = log Debug
