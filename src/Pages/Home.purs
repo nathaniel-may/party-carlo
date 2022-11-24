@@ -45,6 +45,7 @@ data Action
     = ReceiveInput String
     | PressButton
     | ShowBars Interval
+    | ClearDefaultText
 
 -- State is represented as a sum type because the app is one page with different views
 -- rather than multiple pages with meaninfully separate urls
@@ -61,10 +62,13 @@ data State
     }
     | Loading
 
+-- TODO move into its own module PartyCarlo.Pages.Home.Error
 data Error
     = InvalidNumber String
     | InvalidProbability String Number
     | ExperimentsFailed
+
+derive instance eqError :: Eq Error
 
 -- | string used to display the error value to the user (suitable for both UI and console logs)
 instance displayError :: Display Error where
@@ -74,6 +78,12 @@ instance displayError :: Display Error where
 
 experimentCount :: Int
 experimentCount = 100000
+
+defaultTextAreaValue :: String
+defaultTextAreaValue = "How many people do you expect to attend your party?\n\n"
+    <> "Put in a probability for how likely it is for each person to attend and this will use Monte Carlo experiments to give you confidence intervals for what you think the group's attendance will be.\n\n"
+    <> "ex.\n\n"
+    <> ".1\n.99\n.5\n.5\n"
 
 component
     :: ∀ q o m
@@ -115,15 +125,12 @@ component = H.mkComponent
         HH.div [ css "vcontainer" ]
         [ header
         , button "Run" PressButton
-        , HH.p [ css "pcenter" ]
-            [ HH.text "How many people do you expect to attend your party?" ]
-        , HH.p_
-            [ HH.text "Put in a probability for how likely it is for each person to attend and this will use Monte Carlo experiments to give you confidence intervals for what you think the group's attendance will be." ]
         , HH.p [ css "error" ]
-            [ HH.text $ maybe "" display st.e ]
+            [ HH.text $ maybe " " display st.e ]
         , HH.textarea
             [ HP.id "input"
             , HP.value st.input
+            , HE.onClick \_ -> ClearDefaultText
             , HE.onValueInput ReceiveInput
             ]
         , footer
@@ -162,6 +169,14 @@ handleAction'
     => State 
     -> Action
     -> m Unit
+-- if we get input on the input page, save it to the state
+handleAction' (Data st) ClearDefaultText = do
+    H.put (Data (st { input = "" }))
+
+-- no default text to clear on any other view
+handleAction' _ ClearDefaultText =
+    pure unit
+
 -- if we get input on the input page, save it to the state
 handleAction' (Data st) (ReceiveInput s) =
     H.put (Data (st { input = s }))
