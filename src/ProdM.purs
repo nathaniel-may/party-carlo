@@ -8,16 +8,16 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console as Console
 import Effect.Now as Now
 import Halogen as H
-import Halogen.Store.Monad (class MonadStore, StoreT, getStore, runStoreT, updateStore)
+import Halogen.Store.Monad (class MonadStore, StoreT, getStore, runStoreT)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
-import PartyCarlo.Capability.Pack (class Pack)
+import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Log as Log
-import PartyCarlo.Store (Env(..), Action(..))
+import PartyCarlo.Store (Env(..))
 import PartyCarlo.Store as Store
-import Random.PseudoRandom (Seed)
+import PartyCarlo.Utils (randomEff)
 import Safe.Coerce (coerce)
 
 
@@ -50,9 +50,8 @@ instance logMessagesProdM :: LogMessages ProdM where
             Prod, Debug -> pure unit
             _, _ -> liftEffect <<< Console.log $ Log.humanString log
 
-instance packSeedProdM :: Pack Seed ProdM where
-    pack = updateStore <<< NewSeed
-    unpack = _.seed <$> getStore
+instance randomProdM :: Random ProdM where
+    random = liftEffect randomEff
 
 instance sleepProdM :: Sleep ProdM where
     sleep = liftAff <<< delay

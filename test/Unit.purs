@@ -14,13 +14,12 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
-import PartyCarlo.Capability.Pack (class Pack)
+import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Probability (p95, probability)
 import PartyCarlo.MonteCarlo (monteCarloConfidenceInterval)
 import PartyCarlo.Pages.Home (Error(..), State(..))
 import PartyCarlo.Pages.Home as Home
-import Random.PseudoRandom (Seed)
 import Test.Capability.Assert (class Assert, assert, assertEqual, fail)
 import Test.Capability.Metadata (class Metadata, getMeta)
 import Test.TestM as TestM
@@ -34,7 +33,7 @@ allTests
     => Sleep m
     => LogMessages m 
     => Now m
-    => Pack Seed m
+    => Random m
     => MonadState Home.State m
     => Array (m Unit)
 allTests = [test0, test1, test2, test3, test4]
@@ -47,7 +46,7 @@ test0
     => Sleep m
     => LogMessages m 
     => Now m
-    => Pack Seed m
+    => Random m
     => MonadState Home.State m
     => m Unit
 test0 = do
@@ -63,7 +62,7 @@ test0 = do
 test1
     :: forall m
     . Assert m
-    => Pack Seed m
+    => Random m
     => m Unit
 test1 = case traverse (hush <<< probability) [0.1, 0.99, 0.5, 0.5] of
     Nothing -> 
@@ -84,7 +83,7 @@ test2
     => Sleep m
     => LogMessages m 
     => Now m
-    => Pack Seed m
+    => Random m
     => MonadState Home.State m
     => m Unit
 test2 = do
@@ -104,7 +103,7 @@ test3
     => Sleep m
     => LogMessages m 
     => Now m
-    => Pack Seed m
+    => Random m
     => MonadState Home.State m
     => m Unit
 test3 = do
@@ -126,7 +125,7 @@ test4
     => Sleep m
     => LogMessages m 
     => Now m
-    => Pack Seed m
+    => Random m
     => MonadState Home.State m
     => m Unit
 test4 = do

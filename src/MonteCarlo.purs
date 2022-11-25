@@ -10,18 +10,17 @@ import Data.Foldable (foldM)
 import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import PartyCarlo.Capability.Pack (class Pack)
+import PartyCarlo.Capability.Random (class Random, random)
 import PartyCarlo.Data.Probability (Probability)
 import PartyCarlo.Data.Probability as Prob
 import PartyCarlo.Data.SortedArray (SortedArray, length, (!!))
 import PartyCarlo.Data.SortedArray as SortedArray
-import PartyCarlo.Utils (if', replicateM, rng)
-import Random.PseudoRandom (Seed)
+import PartyCarlo.Utils (if', replicateM)
 
 
 type Dist = Array Probability
 
-monteCarloConfidenceInterval ::  ∀ m. Pack Seed m => Probability -> Int -> Dist -> m (Maybe (Tuple Int Int))
+monteCarloConfidenceInterval ::  ∀ m. Random m => Probability -> Int -> Dist -> m (Maybe (Tuple Int Int))
 monteCarloConfidenceInterval p count dist = do
     samples <- sample dist count
     pure $ confidenceInterval p (SortedArray.fromArray samples)
@@ -33,8 +32,8 @@ confidenceInterval p sorted = Tuple <$> low <*> high where
     high = sorted !! floor (Prob.toNumber p * toNumber len)
     len = length sorted
 
-sample :: ∀ m. Pack Seed m => Dist -> Int -> m (Array Int)
+sample :: ∀ m. Random m => Dist -> Int -> m (Array Int)
 sample dist count = replicateM count (oneSample dist)
 
-oneSample :: ∀ m. Pack Seed m => Dist -> m Int
-oneSample = foldM (\count d -> (\p -> (if' (p < d) (count + 1) count)) <$> rng) 0
+oneSample :: ∀ m. Random m => Dist -> m Int
+oneSample = foldM (\count d -> (\p -> (if' (p < d) (count + 1) count)) <$> random) 0

@@ -12,10 +12,11 @@ import Data.Foldable (class Foldable, foldr)
 import Data.Maybe (Maybe, fromMaybe, maybe)
 import Data.String as String
 import Data.Traversable (sequence)
-import PartyCarlo.Capability.Pack (class Pack, pack, unpack)
+import Effect (Effect)
+import Effect.Random as EffRand
+import PartyCarlo.Capability.Random (class Random, random)
 import PartyCarlo.Data.Display (class Display, display)
 import PartyCarlo.Data.Probability (Probability, probability)
-import Random.PseudoRandom (Seed, randomR)
 
 
 mapLeft :: ∀ a e' e. (e -> e') -> Either e a -> Either e' a
@@ -29,18 +30,6 @@ noteT e = liftEither <<< note e
 
 replicateM :: ∀ m a. Applicative m => Int -> m a -> m (Array a)
 replicateM n m = sequence (Array.replicate n m)
-
-rng :: ∀ m. Pack Seed m => m Probability
-rng = do
-    seed <- unpack
-    let { newSeed, newVal } = randomR 0.0 1.0 seed
-    pack newSeed
-    -- recurse if the random number is not a valid probability
-    -- (should never occur)
-    either (const rng) pure (probability newVal)
-
-rngs :: ∀ m. Pack Seed m => Int -> m (Array Probability)
-rngs n = replicateM n rng
 
 -- TODO change foldr -> foldl everywhere because PS is strict
 count :: ∀ t a. Foldable t => (a -> Boolean) -> t a -> Int
@@ -63,3 +52,11 @@ cycleUp x = fromMaybe bottom (succ x)
 
 cycleDown :: ∀ a. BoundedEnum a => a -> a
 cycleDown x = fromMaybe top (pred x)
+
+-- | generating random probabilities
+randomEff :: Effect Probability
+randomEff = tillValid =<< EffRand.random
+    where tillValid n = either (const $ tillValid =<< EffRand.random) pure (probability n)
+
+randoms :: forall m. Random m => Int -> m (Array Probability)
+randoms n = replicateM n random

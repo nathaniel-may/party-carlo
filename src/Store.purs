@@ -3,8 +3,6 @@ module PartyCarlo.Store where
 
 import Prelude
 
-import Random.PseudoRandom (Seed)
-
 
 -- | Indicates whether the app was built for dev or prod
 data Env = Dev | Prod
@@ -14,13 +12,9 @@ derive instance ordLogLevel :: Ord Env
 
 type Store =
     -- what env the app was compiled for
-    { env :: Env
-    -- what seed the rng should use
-    , seed :: Seed
-    }
+    { env :: Env }
 
-data Action
-    = NewSeed Seed
+type Action = Void
 
 reduce :: Store -> Action -> Store
-reduce store (NewSeed seed) = store { seed = seed }
+reduce = const

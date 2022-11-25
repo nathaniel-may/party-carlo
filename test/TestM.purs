@@ -18,11 +18,11 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
-import PartyCarlo.Capability.Pack (class Pack)
+import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (Log)
 import PartyCarlo.Pages.Home as Home
-import Random.PseudoRandom (Seed, mkSeed)
+import PartyCarlo.Utils (randomEff)
 import Test.Assert as Assert
 import Test.Capability.Assert (class Assert)
 import Test.Capability.Metadata (class Metadata, getMeta, modifyMeta_)
@@ -60,14 +60,12 @@ forceDateTime Nothing = forceDateTime Nothing
 type Meta =
     { timeCounter :: Int 
     , logs :: Array Log
-    , seed :: Seed
     }
 
 initialMeta :: Meta
 initialMeta = 
     { timeCounter : 0
     , logs : []
-    , seed : mkSeed 1
     }
 
 progressTime :: TestM DateTime
@@ -88,9 +86,8 @@ instance nowTestM :: Now TestM where
 instance logMessagesTestM :: LogMessages TestM where
     logMessage log = modifyMeta_ \s -> (s { logs = s.logs <> [log] })
 
-instance packSeedTestM :: Pack Seed TestM where
-    pack seed = modifyMeta_ (_ { seed = seed })
-    unpack = _.seed <$> getMeta
+instance randomTestM :: Random TestM where
+    random = liftEffect randomEff
 
 instance assertTestM :: Assert TestM where
     assert msg cond = liftEffect (Assert.assert' msg cond)

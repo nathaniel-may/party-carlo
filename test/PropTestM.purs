@@ -3,24 +3,27 @@ module Test.PropTestM where
 
 import Prelude
 
-import Control.Monad.State (State, evalState)
-import Control.Monad.State.Class (class MonadState, get, put)
-import PartyCarlo.Capability.Pack (class Pack)
-import Random.PseudoRandom (Seed)
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Aff.Class (class MonadAff)
+import Effect.Class (class MonadEffect, liftEffect)
+import PartyCarlo.Capability.Random (class Random)
+import PartyCarlo.Utils (randomEff)
 
 
-newtype PropTestM a = PropTestM (State Seed a)
+newtype PropTestM a = PropTestM (Effect a)
 
-runPropTestM :: ∀ a. PropTestM a -> Seed -> a
-runPropTestM (PropTestM m) seed = evalState m seed
+runPropTestM :: ∀ a. PropTestM a -> Effect a
+runPropTestM (PropTestM m) = m
 
 derive newtype instance functorTestM :: Functor PropTestM
 derive newtype instance applyTestM :: Apply PropTestM
 derive newtype instance applicativeTestM :: Applicative PropTestM
 derive newtype instance bindTestM :: Bind PropTestM
 derive newtype instance monadTestM :: Monad PropTestM
-derive newtype instance monadStateTestM :: MonadState Seed PropTestM
+derive newtype instance monadEffectTestM :: MonadEffect PropTestM
 
-instance packSeedTestM :: Pack Seed PropTestM where
-    pack = put
-    unpack = get
+-- TODO find or make a pure psudo-rng that isn't slow
+-- TODO put this in Aff instead with makeAff?
+instance randomTestM :: Random PropTestM where
+    random = liftEffect randomEff
