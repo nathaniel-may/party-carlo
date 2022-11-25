@@ -143,13 +143,13 @@ component = H.mkComponent
         HH.div [ HP.id "root", css "vcontainer noselect" ]
         [ header
         , loadingAnimation
+        , renderToggleRow Loading
         , footer
         ]
 
     render (Results st) = 
         HH.div [ HP.id "root", css "vcontainer" ]
         [ header
-        , HH.h2_ [ HH.text $ display (fst st.result.p95) <> " - " <> display (snd st.result.p95) ]
         -- TODO move this text into an info view
         -- , HH.p_
         --     [ HH.text $ "After running " <> display experimentCount <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
@@ -158,23 +158,7 @@ component = H.mkComponent
         -- , HH.p_
         --     [ HH.text "The chart below is your real sample data. Explore by hovering over the boxes below for other confidence intervals from 90% to 99.9%"]
         , resultCircle st.result st.show
-        , HH.div [ css "hcontainer togglerow" ]
-            [ HH.div 
-                [ css "toggle neon noselect"
-                , HP.id "left" 
-                , HE.onClick \_ -> ResultDown
-                ]
-                [ HH.text "←" ]
-            , HH.div [ css "vcontainer showInterval" ]
-                [ HH.div_ [ HH.text $ display st.show ]
-                , HH.div_ [ HH.text "confidence" ] ]
-            , HH.div 
-                [ css "toggle neon noselect"
-                , HP.id "right"
-                , HE.onClick \_ -> ResultUp
-                ]
-                [ HH.text "→" ]
-            ]
+        , renderToggleRow (Results st)
         , footer
         ]
 
@@ -184,6 +168,32 @@ component = H.mkComponent
         , HE.onClick \_ -> EditData
         ] 
         [ HH.text "Party Carlo" ]
+
+    renderToggleRow :: ∀ i. State -> HH.HTML i Action
+    renderToggleRow state = 
+        let 
+            i = case state of
+                Results st -> st.show
+                _ -> P95
+        in 
+            HH.div [ css "hcontainer togglerow" ]
+                [ HH.div 
+                    [ css "toggle neon noselect"
+                    , HP.id "left" 
+                    , HE.onClick \_ -> ResultDown
+                    ]
+                    [ HH.text "←" ]
+                , HH.div [ css "vcontainer showInterval" ]
+                    [ HH.div_ [ HH.text $ display i ]
+                    , HH.div_ [ HH.text "confidence" ] ]
+                , HH.div 
+                    [ css "toggle neon noselect"
+                    , HP.id "right"
+                    , HE.onClick \_ -> ResultUp
+                    ]
+                    [ HH.text "→" ]
+                ]
+
 
 -- | a testable breakout of the handleAction function for the component
 handleAction' 

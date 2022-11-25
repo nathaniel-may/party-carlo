@@ -195,10 +195,39 @@ button:focus {
     white-space: pre;
 }
 
+.loading-circle {
+    position: relative;
+    border-radius: 50%;
+    margin-top: 40px;
+    margin-bottom: 40px;
+    font-size: 32px;
+    background: transparent;
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    text-align: center;
+    width: 13rem;
+    height: 13rem;
+}
+
+.loading-circle:before {
+    border: 13px solid hsl(189, 87%, 51%);
+    border-radius: 50%;
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    filter: blur(7px);
+    z-index:0;
+}
+
+/* TODO rename to result-circle */
 .resultCircle {
     position: relative;
     border-radius: 50%;
-    margin-top: 20px;
+    margin-top: 40px;
     margin-bottom: 40px;
     font-size: 32px;
     background: transparent;

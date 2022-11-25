@@ -7,14 +7,4 @@ import PartyCarlo.Components.HTML.Utils (css)
 -- | a pure css loading animation
 loadingAnimation :: ∀ i p. HH.HTML i p
 loadingAnimation = 
-    HH.div [ css "lds-grid" ]
-        [ HH.div_ []
-        , HH.div_ []
-        , HH.div_ []
-        , HH.div_ []
-        , HH.div_ []
-        , HH.div_ []
-        , HH.div_ []
-        , HH.div_ []
-        , HH.div_ []
-        ]
+    HH.div [ css "loading-circle" ] []
