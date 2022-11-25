@@ -4,8 +4,6 @@ module Test.PropTestM where
 import Prelude
 
 import Effect (Effect)
-import Effect.Aff (Aff)
-import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Utils (randomEff)

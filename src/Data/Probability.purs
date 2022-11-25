@@ -4,7 +4,7 @@ module PartyCarlo.Data.Probability (
     , p95
     , p99
     , p999
-    , probability
+    , mkProbability
     , toNumber
 ) where
 
@@ -20,9 +20,8 @@ newtype Probability = Probability Number
 derive newtype instance eqProbability :: Eq Probability
 derive newtype instance ordProbability :: Ord Probability
 
--- TODO rename mkProbability
-probability :: Number -> Either Number Probability
-probability p = if p <= 1.0 && p >= 0.0 then Right (Probability p) else Left p
+mkProbability :: Number -> Either Number Probability
+mkProbability p = if p <= 1.0 && p >= 0.0 then Right (Probability p) else Left p
 
 toNumber :: Probability -> Number
 toNumber (Probability x) = x

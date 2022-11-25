@@ -16,7 +16,7 @@ import Effect (Effect)
 import Effect.Random as EffRand
 import PartyCarlo.Capability.Random (class Random, random)
 import PartyCarlo.Data.Display (class Display, display)
-import PartyCarlo.Data.Probability (Probability, probability)
+import PartyCarlo.Data.Probability (Probability, mkProbability)
 
 
 mapLeft :: ∀ a e' e. (e -> e') -> Either e a -> Either e' a
@@ -56,7 +56,7 @@ cycleDown x = fromMaybe top (pred x)
 -- | generating random probabilities
 randomEff :: Effect Probability
 randomEff = tillValid =<< EffRand.random
-    where tillValid n = either (const $ tillValid =<< EffRand.random) pure (probability n)
+    where tillValid n = either (const $ tillValid =<< EffRand.random) pure (mkProbability n)
 
 randoms :: forall m. Random m => Int -> m (Array Probability)
 randoms n = replicateM n random

@@ -31,7 +31,7 @@ import PartyCarlo.Components.HTML.ResultCircle (resultCircle)
 import PartyCarlo.Components.HTML.Utils (css)
 import PartyCarlo.Data.Display (class Display, display)
 import PartyCarlo.Data.Log (LogLevel(..))
-import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, probability)
+import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, mkProbability)
 import PartyCarlo.Data.Result (Interval(..), Result)
 import PartyCarlo.Data.SortedArray as SortedArray
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
@@ -309,7 +309,7 @@ runExperiments dist = do
     pure $ note ExperimentsFailed result
 
 parse :: Array String -> Either Error (Array Probability)
-parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< probability =<< parseNum s) <$> input
+parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< mkProbability =<< parseNum s) <$> input
 
 parseNum :: String -> Either Error Number
 parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)

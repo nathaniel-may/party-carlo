@@ -16,7 +16,7 @@ import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
-import PartyCarlo.Data.Probability (p95, probability)
+import PartyCarlo.Data.Probability (p95, mkProbability)
 import PartyCarlo.MonteCarlo (monteCarloConfidenceInterval)
 import PartyCarlo.Pages.Home (Error(..), State(..))
 import PartyCarlo.Pages.Home as Home
@@ -64,7 +64,7 @@ test1
     . Assert m
     => Random m
     => m Unit
-test1 = case traverse (hush <<< probability) [0.1, 0.99, 0.5, 0.5] of
+test1 = case traverse (hush <<< mkProbability) [0.1, 0.99, 0.5, 0.5] of
     Nothing -> 
         fail "probabilies failed to parse in test1"
     Just dist ->
