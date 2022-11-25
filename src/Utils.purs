@@ -8,7 +8,7 @@ import Control.Monad.Error.Class (class MonadError, liftEither)
 import Data.Array as Array
 import Data.Either (Either(..), either)
 import Data.Enum (class BoundedEnum, pred, succ)
-import Data.Foldable (class Foldable, foldr)
+import Data.Foldable (class Foldable, foldl)
 import Data.Maybe (Maybe, fromMaybe, maybe)
 import Data.String as String
 import Data.Traversable (sequence)
@@ -31,9 +31,8 @@ noteT e = liftEither <<< note e
 replicateM :: ∀ m a. Applicative m => Int -> m a -> m (Array a)
 replicateM n m = sequence (Array.replicate n m)
 
--- TODO change foldr -> foldl everywhere because PS is strict
 count :: ∀ t a. Foldable t => (a -> Boolean) -> t a -> Int
-count f = foldr (\x total -> if f x then total + 1 else total) 0
+count f = foldl (\total x -> if f x then total + 1 else total) 0
 
 -- | function wrapper for if statement
 if' :: ∀ a. Boolean -> a -> a -> a

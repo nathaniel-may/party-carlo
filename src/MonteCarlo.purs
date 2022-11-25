@@ -1,5 +1,5 @@
 -- | Module for running and reasoning about Monte Carlo experiments.
--- TODO rewrite the module to be more portable by removing dependency on Pack type class. 
+-- TODO rewrite the module to be more portable by removing dependency on Random class. 
 -- TODO Maybe use Effect, lift to Aff and use parTraverse as well
 module PartyCarlo.MonteCarlo where
 
