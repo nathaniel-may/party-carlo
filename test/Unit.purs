@@ -52,7 +52,7 @@ test0
     => m Unit
 test0 = do
     -- press the button with well formed input
-    Home.handleAction' (Home.Data { e : Nothing, input : ".5" }) Home.RunExperiments
+    Home.handleAction' (Home.Data { e : Nothing, input : ".5" }) Home.ButtonPress
     s <- getMeta
     -- assert time effect and log effects happened the correct number of times
     assertEqual "the result should have been timed, so time should have been accessed two more times than the number of logs." { actual: s.timeCounter - (length s.logs), expected: 2 }
@@ -89,7 +89,7 @@ test2
     => m Unit
 test2 = do
     -- press the button with well formed input
-    Home.handleAction' (Home.Data { e : Nothing, input : ".1\n.99\n.5\n.5\n" }) Home.RunExperiments
+    Home.handleAction' (Home.Data { e : Nothing, input : ".1\n.99\n.5\n.5\n" }) Home.ButtonPress
     s <- get
     case s of
         Results { input: _, dist: _, result: r } -> case r.p95 of
@@ -109,7 +109,7 @@ test3
     => m Unit
 test3 = do
     let badInput = "bad input"
-    Home.handleAction' (Home.Data { e : Nothing, input : badInput }) Home.RunExperiments
+    Home.handleAction' (Home.Data { e : Nothing, input : badInput }) Home.ButtonPress
     get >>= case _ of
         Data state ->
             assert "pressing the button with a bad non-Number input should yeild an InvalidNumber error" (state.e == Just (InvalidNumber badInput))
@@ -131,7 +131,7 @@ test4
     => m Unit
 test4 = do
     let badInput = "2"
-    Home.handleAction' (Home.Data { e : Nothing, input : badInput }) Home.RunExperiments
+    Home.handleAction' (Home.Data { e : Nothing, input : badInput }) Home.ButtonPress
     get >>= case _ of
         Data state ->
             assert "pressing the button with a bad Number input should yeild an InvalidProbability error" (state.e == Just (InvalidProbability badInput 2.0))

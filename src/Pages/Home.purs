@@ -26,7 +26,6 @@ import PartyCarlo.Capability.LogMessages (class LogMessages, log)
 import PartyCarlo.Capability.Now (class Now, nowDateTime)
 import PartyCarlo.Capability.Pack (class Pack)
 import PartyCarlo.Capability.Sleep (class Sleep, sleep)
-import PartyCarlo.Components.HTML.Button (button)
 import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.ResultCircle (resultCircle)
@@ -43,8 +42,7 @@ import Random.PseudoRandom (Seed)
 
 data Action 
     = ReceiveInput String
-    | RunExperiments
-    | EditData
+    | ButtonPress
     | ShowBars Interval
     | ClearDefaultText
     | ResultUp
@@ -84,7 +82,8 @@ experimentCount :: Int
 experimentCount = 100000
 
 defaultTextAreaValue :: String
-defaultTextAreaValue = "Enter a list of probabilities: One for each attendee. Hit \"Run\" to get a confidence interval for overall attendance.\n\n"
+defaultTextAreaValue = "Enter a list of probabilities: One for each attendee.\n\n"
+    <> "Hit the button above to get a confidence interval for overall attendance.\n\n"
     <> "ex.\n\n"
     <> ".1\n.99\n.5"
 
@@ -126,7 +125,7 @@ component = H.mkComponent
     render :: ∀ c. State -> H.ComponentHTML Action c m
     render (Data st) =
         HH.div [ HP.id "root", css "vcontainer" ]
-        [ header
+        [ titleButton
         , HH.p [ css "error" ]
             [ HH.text $ maybe " " display st.e ]
         , HH.textarea
@@ -135,13 +134,12 @@ component = H.mkComponent
             , HE.onClick \_ -> ClearDefaultText
             , HE.onValueInput ReceiveInput
             ]
-        , button "Run" RunExperiments
         , footer
         ]
 
     render Loading =
         HH.div [ HP.id "root", css "vcontainer noselect" ]
-        [ header
+        [ titleButton
         , loadingAnimation
         , renderToggleRow Loading
         , footer
@@ -149,7 +147,7 @@ component = H.mkComponent
 
     render (Results st) = 
         HH.div [ HP.id "root", css "vcontainer" ]
-        [ header
+        [ titleButton
         -- TODO move this text into an info view
         -- , HH.p_
         --     [ HH.text $ "After running " <> display experimentCount <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
@@ -162,10 +160,10 @@ component = H.mkComponent
         , footer
         ]
 
-    header :: ∀ i. HH.HTML i Action
-    header = HH.h1 
-        [ css "neon"
-        , HE.onClick \_ -> EditData
+    titleButton :: ∀ i. HH.HTML i Action
+    titleButton = HH.h1 
+        [ css "neon noselect"
+        , HE.onClick \_ -> ButtonPress
         ] 
         [ HH.text "Party Carlo" ]
 
@@ -235,17 +233,6 @@ handleAction' _ ResultUp =
 handleAction' _ ResultDown =
     pure unit
 
--- move to the edit data view from the results view
-handleAction' (Results st) EditData = do
-    log Debug "party carlo pressed"
-    log Debug "returning to edit view"
-    H.put (Data { e : Nothing, input : st.input })
-
--- nothing to do on other views
-handleAction' _ EditData = do
-    log Debug "party carlo pressed"
-    pure unit
-
 -- if we get input on the input page, save it to the state and remove any displayed error
 handleAction' (Data st) (ReceiveInput s) =
     H.put (Data (st { e = Nothing, input = s }))
@@ -254,9 +241,15 @@ handleAction' (Data st) (ReceiveInput s) =
 handleAction' _ (ReceiveInput _) = 
     pure unit
 
+-- move to the edit data view from the results view
+handleAction' (Results st) ButtonPress = do
+    log Debug "party carlo pressed in results view"
+    log Debug "returning to edit view"
+    H.put (Data { e : Nothing, input : st.input })
+
 -- pressing the button on the data view will parse the input then run the experiments
-handleAction' (Data st) RunExperiments = do
-    log Debug "button pressed"
+handleAction' (Data st) ButtonPress = do
+    log Debug "button pressed in data view"
     log Debug  "run action initiated"
     case parse <<< stripInput $ st.input of
         Left e -> do
@@ -285,8 +278,9 @@ handleAction' (Data st) RunExperiments = do
                     log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ""
                     log Debug $ fold ["result set: p90=", display r.p90, " p95=", display r.p95, " p99=", display r.p99, " p99.9=", display r.p999]
 
--- there's no button to run experiments on any other view
-handleAction' _ RunExperiments = 
+-- nothing to do on other views
+handleAction' _ ButtonPress = do
+    log Debug "party carlo pressed but there's nothing to do"
     pure unit
 
 -- show the vertical graph bars on the results view
