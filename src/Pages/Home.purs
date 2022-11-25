@@ -172,9 +172,13 @@ component = H.mkComponent
     renderToggleRow :: ∀ i. State -> HH.HTML i Action
     renderToggleRow state = 
         let 
-            i = case state of
-                Results st -> st.show
-                _ -> P95
+            showInterval = case state of
+                Results st -> 
+                    [ HH.div_ [ HH.text $ display st.show ]
+                    , HH.div_ [ HH.text "confidence" ] ]
+                _ ->
+                    [ HH.div_ [ HH.text "" ]
+                    , HH.div_ [ HH.text "" ] ]
         in 
             HH.div [ css "hcontainer togglerow" ]
                 [ HH.div 
@@ -184,8 +188,7 @@ component = H.mkComponent
                     ]
                     [ HH.text "←" ]
                 , HH.div [ css "vcontainer showInterval" ]
-                    [ HH.div_ [ HH.text $ display i ]
-                    , HH.div_ [ HH.text "confidence" ] ]
+                    showInterval
                 , HH.div 
                     [ css "toggle neon noselect"
                     , HP.id "right"
