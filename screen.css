@@ -200,7 +200,8 @@ button:focus {
 }
 
 #p90.result-circle::before {
-    border: 13px solid hsl(189deg 87% 51%);
+    /* bump the saturation because this much blur fades the color */
+    border: 13px solid hsl(189deg 100% 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
