@@ -16,7 +16,6 @@ import Data.String as String
 import Data.String.Utils (lines)
 import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (sequence)
-import Data.Tuple (fst, snd)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
@@ -185,7 +184,7 @@ component = H.mkComponent
                     , HE.onClick \_ -> ResultDown
                     ]
                     [ HH.text "←" ]
-                , HH.div [ css "vcontainer showInterval" ]
+                , HH.div [ css "vcontainer show-interval" ]
                     showInterval
                 , HH.div 
                     [ css "toggle neon noselect"

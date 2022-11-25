@@ -1,6 +1,6 @@
 @font-face {
     font-family: larke-neue;
-    src: url(resources/Larke-Neue-Regular.ttf)
+    src: url("resources/Larke-Neue-Regular.ttf");
 }
 
 body {
@@ -23,54 +23,50 @@ body {
         0 0 92px #8508eb,
         0 0 102px #8508eb,
         0 0 151px #8508eb;
-    box-shadow: 0 0 .2rem #fff,
-        0 0 .2rem #fff,
+    box-shadow:
+        0 0 0.2rem #fff,
+        0 0 0.2rem #fff,
         0 0 2rem #8508eb,
         0 0 0.8rem #8508eb,
         0 0 2.8rem #8508eb,
-        inset 0 0 1.3rem #8508eb; 
+        inset 0 0 1.3rem #8508eb;
     animation: pulsate 1.5s infinite alternate;
-} 
+}
 
 h1 {
     text-align: center;
-    font-size: 3rem; 
+    font-size: 3rem;
     border: 0.15rem solid #fff;
     border-radius: 2rem;
     padding: 0.8em;
-    /* the font leaves a little extra room under most 
+    /* the font leaves a little extra room under most
     of the letters so we pad the top for balance */
-    padding-top: .9em;
+    padding-top: 0.9em;
 }
 
 @keyframes pulsate {
-        
     100% {
-
         text-shadow:
-        0 0 4px #fff,
-        0 0 11px #fff,
-        0 0 19px #fff,
-        0 0 40px #8508eb,
-        0 0 80px #8508eb,
-        0 0 90px #8508eb,
-        0 0 100px #8508eb,
-        0 0 150px #8508eb;
-
+            0 0 4px #fff,
+            0 0 11px #fff,
+            0 0 19px #fff,
+            0 0 40px #8508eb,
+            0 0 80px #8508eb,
+            0 0 90px #8508eb,
+            0 0 100px #8508eb,
+            0 0 150px #8508eb;
     }
 
     0% {
-
         text-shadow:
-        0 0 2px #fff,
-        0 0 4px #fff,
-        0 0 6px #fff,
-        0 0 10px #8508eb,
-        0 0 45px #8508eb,
-        0 0 55px #8508eb,
-        0 0 70px #8508eb,
-        0 0 80px #8508eb;
-
+            0 0 2px #fff,
+            0 0 4px #fff,
+            0 0 6px #fff,
+            0 0 10px #8508eb,
+            0 0 45px #8508eb,
+            0 0 55px #8508eb,
+            0 0 70px #8508eb,
+            0 0 80px #8508eb;
     }
 }
 
@@ -84,17 +80,12 @@ p {
 
 .error {
     white-space: pre-wrap;
-    color: rgb(233, 44, 44);
+    color: rgb(233 44 44);
 }
 
 .vcontainer {
-    display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
-    display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
-    display: -ms-flexbox;      /* TWEENER - IE 10 */
-    display: -webkit-flex;     /* NEW - Chrome */
-    display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
-    flex-wrap: nowrap;
-    flex-direction: column;
+    display: flex;
+    flex-flow: column nowrap;
     justify-content: center;
     align-items: center;
     margin: auto;
@@ -106,13 +97,8 @@ p {
 }
 
 .hcontainer {
-    display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
-    display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
-    display: -ms-flexbox;      /* TWEENER - IE 10 */
-    display: -webkit-flex;     /* NEW - Chrome */
-    display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
-    flex-wrap: nowrap;
-    flex-direction: row;
+    display: flex;
+    flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
     width: 100%;
@@ -125,11 +111,10 @@ textarea {
     margin-bottom: 40px;
     padding: 12px 20px;
     resize: none;
-    font-family: 'Lucida Console', 'Monaco', 'monospace';
+    font-family: "Lucida Console", Monaco, monospace;
     font-size: 16px;
     border: 2px solid #ccc;
     border-radius: 15px;
-    background-color: #010a01;
     color: white;
     opacity: 0.9;
     background: transparent;
@@ -164,11 +149,8 @@ button:focus {
     color: white;
     border: 1px solid #444;
     width: 15%;
-    padding: 15px 15px;
-    margin-left: 10px;
-    margin-right: 10px;
-    margin-top: 30px;
-    margin-bottom: 10px;
+    padding: 15px;
+    margin: 30px 10px 10px;
     font-size: 16px;
     text-align: center;
     text-decoration: none;
@@ -184,15 +166,15 @@ button:focus {
     font-size: 32px;
     background: transparent;
     display: flex;
-    align-items: center; 
+    align-items: center;
     justify-content: center;
     text-align: center;
     width: 13rem;
     height: 13rem;
 }
 
-.loading-circle:before {
-    border: 13px solid hsl(189, 87%, 51%);
+.loading-circle::before {
+    border: 13px solid hsl(189deg 87% 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -201,11 +183,10 @@ button:focus {
     right: 0;
     bottom: 0;
     filter: blur(7px);
-    z-index:0;
+    z-index: 0;
 }
 
-/* TODO rename to result-circle */
-.resultCircle {
+.result-circle {
     position: relative;
     border-radius: 50%;
     margin-top: 40px;
@@ -213,13 +194,13 @@ button:focus {
     font-size: 32px;
     background: transparent;
     display: flex;
-    align-items: center; 
+    align-items: center;
     justify-content: center;
     text-align: center;
 }
 
-#p90.resultCircle:before {
-    border: 13px solid hsl(189, 87%, 51%);
+#p90.result-circle::before {
+    border: 13px solid hsl(189deg 87% 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -228,11 +209,11 @@ button:focus {
     right: 0;
     bottom: 0;
     filter: blur(12px);
-    z-index:0;
+    z-index: 0;
 }
 
-#p95.resultCircle:before {
-    border: 13px solid hsl(189, 87%, 51%);
+#p95.result-circle::before {
+    border: 13px solid hsl(189deg 87% 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -241,11 +222,11 @@ button:focus {
     right: 0;
     bottom: 0;
     filter: blur(7px);
-    z-index:0;
+    z-index: 0;
 }
 
-#p99.resultCircle:before {
-    border: 13px solid hsl(189, 87%, 51%);
+#p99.result-circle::before {
+    border: 13px solid hsl(189deg 87% 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -254,11 +235,11 @@ button:focus {
     right: 0;
     bottom: 0;
     filter: blur(4px);
-    z-index:0;
+    z-index: 0;
 }
 
-#p999.resultCircle:before {
-    border: 13px solid hsl(189, 87%, 51%);
+#p999.result-circle::before {
+    border: 13px solid hsl(189deg 87% 51%);
     border-radius: 50%;
     content: "";
     position: absolute;
@@ -267,16 +248,19 @@ button:focus {
     right: 0;
     bottom: 0;
     filter: blur(2px);
-    z-index:0;
+    z-index: 0;
 }
 
-.resultCircle span {
+.result-circle span {
     color: white;
     position: relative;
     z-index: 1;
 }
 
-#p90, #p95, #p99, #p999 {
+#p90,
+#p95,
+#p99,
+#p999 {
     width: 13rem;
     height: 13rem;
 }
@@ -284,7 +268,7 @@ button:focus {
 .togglerow {
     margin-top: 60px;
     margin-bottom: 20px;
-    width: 80%
+    width: 80%;
 }
 
 .toggle {
@@ -293,12 +277,12 @@ button:focus {
     width: 4rem;
     height: 4rem;
     display: flex;
-    align-items: center; 
+    align-items: center;
     justify-content: center;
     text-align: center;
 }
 
-.showInterval {
+.show-interval {
     color: white;
     white-space: pre-wrap;
     display: flex;
@@ -308,13 +292,7 @@ button:focus {
 }
 
 .noselect {
-    -webkit-touch-callout: none; /* iOS Safari */
-      -webkit-user-select: none; /* Safari */
-       -khtml-user-select: none; /* Konqueror HTML */
-         -moz-user-select: none; /* Old versions of Firefox */
-          -ms-user-select: none; /* Internet Explorer/Edge */
-              user-select: none; /* Non-prefixed version, currently
-                                    supported by Chrome, Edge, Opera and Firefox */
+    user-select: none;
 }
 
 .label {
@@ -351,35 +329,30 @@ a:hover {
     width: 11em;
     height: 11em;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
-    background: -moz-linear-gradient(left, rgba(255, 255, 255, 0.9) 10%, transparent 42%);
-    background: -webkit-linear-gradient(left, rgba(255, 255, 255, 0.9) 10%, transparent 42%);
-    background: -o-linear-gradient(left, rgba(255, 255, 255, 0.9) 10%, transparent 42%);
-    background: -ms-linear-gradient(left, rgba(255, 255, 255, 0.9) 10%, transparent 42%);
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.9) 10%, transparent 42%);
+    background: rgb(255 255 255 / 90%);
+    background: linear-gradient(to right, rgb(255 255 255 / 90%) 10%, transparent 42%);
     position: relative;
-    -webkit-animation: load3 1.4s infinite linear;
     animation: load3 1.4s infinite linear;
-    -webkit-transform: translateZ(0);
-    -ms-transform: translateZ(0);
     transform: translateZ(0);
 }
-.spinner:before {
+
+.spinner::before {
     width: 50%;
     height: 50%;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 100% 0 0 0;
+    background: rgb(255 255 255 / 90%);
+    border-radius: 100% 0 0;
     position: absolute;
     top: 0;
     left: 0;
-    content: '';
+    content: "";
 }
-.spinner:after {
+
+.spinner::after {
     background: #010a01;
     width: 75%;
     height: 75%;
     border-radius: 50%;
-    content: '';
+    content: "";
     margin: auto;
     position: absolute;
     top: 0;
@@ -387,24 +360,23 @@ a:hover {
     bottom: 0;
     right: 0;
 }
-@-webkit-keyframes load3 {
+
+@keyframes load3 {
     0% {
-        -webkit-transform: rotate(0deg);
         transform: rotate(0deg);
     }
+
     100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-    }
-    }
-    @keyframes load3 {
-    0% {
-        -webkit-transform: rotate(0deg);
-        transform: rotate(0deg);
-    }
-    100% {
-        -webkit-transform: rotate(360deg);
         transform: rotate(360deg);
     }
 }
-  
+
+@keyframes load3 {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
