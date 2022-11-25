@@ -91,7 +91,7 @@ test2 = do
     Home.handleAction' (Home.Data { e : Nothing, input : ".1\n.99\n.5\n.5\n" }) Home.ButtonPress
     s <- get
     case s of
-        Results { input: _, dist: _, result: r } -> case r.p95 of
+        Results { input: _, result: r } -> case r.p95 of
             Tuple x y -> assert "the confidence interval for the default input should not be of size zero" (x /= y)
         _ -> assert "while testing the result of pressing the button, an unexpected state change occurred." false
 

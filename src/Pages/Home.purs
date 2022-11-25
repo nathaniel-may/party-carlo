@@ -55,8 +55,6 @@ data State
     }
     | Results
     { input :: String
-    -- TODO I think we can safely remove dist since it never gets reused.
-    , dist :: Array Probability
     , result :: Result
     , show :: Interval
     }
@@ -268,7 +266,6 @@ handleAction' (Data st) ButtonPress = do
                 Right r -> do
                     H.put ( Results (
                         { input: st.input
-                        , dist: dist
                         , result: r
                         , show: P95
                         } ) )
