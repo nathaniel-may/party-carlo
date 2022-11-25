@@ -18,8 +18,9 @@ import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Probability (p95, mkProbability)
 import PartyCarlo.MonteCarlo (monteCarloConfidenceInterval)
-import PartyCarlo.Pages.Home (Error(..), State(..))
+import PartyCarlo.Pages.Home (State(..))
 import PartyCarlo.Pages.Home as Home
+import PartyCarlo.Pages.Home.Error (Error(..))
 import Test.Capability.Assert (class Assert, assert, assertEqual, fail)
 import Test.Capability.Metadata (class Metadata, getMeta)
 import Test.TestM as TestM

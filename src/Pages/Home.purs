@@ -29,13 +29,14 @@ import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.ResultCircle (resultCircle)
 import PartyCarlo.Components.HTML.Utils (css)
-import PartyCarlo.Data.Display (class Display, display)
+import PartyCarlo.Data.Display (display)
 import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, mkProbability)
 import PartyCarlo.Data.Result (Interval(..), Result)
 import PartyCarlo.Data.SortedArray as SortedArray
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
-import PartyCarlo.Utils (displayTrunc, mapLeft)
+import PartyCarlo.Pages.Home.Error (Error(..))
+import PartyCarlo.Utils (mapLeft)
 
 
 data Action 
@@ -59,20 +60,6 @@ data State
     , show :: Interval
     }
     | Loading
-
--- TODO move into its own module PartyCarlo.Pages.Home.Error
-data Error
-    = InvalidNumber String
-    | InvalidProbability String Number
-    | ExperimentsFailed
-
-derive instance eqError :: Eq Error
-
--- | string used to display the error value to the user (suitable for both UI and console logs)
-instance displayError :: Display Error where
-    display (InvalidNumber s) = "\"" <> displayTrunc 13 s <> "\"" <> " is not a number"
-    display (InvalidProbability s _) = displayTrunc 13 s <> " is not a probability (between 0 and 1)"
-    display ExperimentsFailed = "experiments failed to run. copy your data, reload the page, and try again."
 
 experimentCount :: Int
 experimentCount = 100000
