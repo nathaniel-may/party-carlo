@@ -7,4 +7,7 @@ import PartyCarlo.Components.HTML.Utils (css)
 -- | a pure css loading animation
 loadingAnimation :: ∀ i p. HH.HTML i p
 loadingAnimation = 
-    HH.div [ css "loading-circle" ] []
+    HH.div [ css "loading-circle" ] 
+        [ HH.div [ css "spinner" ]
+            []
+        ]
