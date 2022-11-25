@@ -140,7 +140,7 @@ component = H.mkComponent
         ]
 
     render Loading =
-        HH.div [ HP.id "root", css "vcontainer" ]
+        HH.div [ HP.id "root", css "vcontainer noselect" ]
         [ header
         , loadingAnimation
         , footer
