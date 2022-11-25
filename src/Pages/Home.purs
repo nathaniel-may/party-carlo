@@ -267,8 +267,7 @@ handleAction' (Data st) RunExperiments = do
             log Debug $ "parsed distribution: " <> display dist
             log Info  $ "running " <> display experimentCount <> " experiments"
             H.put Loading
-            -- leave the event loop open for rerendering the page when the keyboard disappears on mobile
-            sleep (Milliseconds 15.0)
+            sleep (Milliseconds 0.0)
             start <- nowDateTime
             exp <- runExperiments dist
             case exp of
