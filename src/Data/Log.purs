@@ -6,6 +6,7 @@ module PartyCarlo.Data.Log
     , mkLog
     , msg
     , ts
+    , vals
     ) where
 
 import Prelude
@@ -29,30 +30,32 @@ instance displayLog :: Display LogLevel where
     display Debug = "DEBUG"
 
 -- | simple structured log type
--- TODO add well typed log events, and implement Display for them to keep all the strings in one place.
-newtype Log = Log
+data Log a = Log
     { ts :: DateTime
     , level :: LogLevel
-    , msg :: String
+    , vals :: a
     }
 
 -- | Accessor for the ts field. Necessary because of the unexported constructor
-ts :: Log -> DateTime
+ts :: forall a. Log a -> DateTime
 ts (Log log) = log.ts
 
 -- | Accessor for the ts field. Necessary because of the unexported constructor
-level :: Log -> LogLevel
+level :: forall a. Log a -> LogLevel
 level (Log log) = log.level
 
--- | Accessor for the ts field. Necessary because of the unexported constructor
-msg :: Log -> String
-msg (Log log) = log.msg
+vals :: forall a. Log a -> a
+vals (Log log) = log.vals
 
-mkLog :: ∀ m. Now m =>  LogLevel -> String -> m Log
-mkLog l m = do
+-- | Generates the message from the structured values.
+msg :: forall a. Display a => Log a -> String
+msg (Log log) = display log.vals
+
+mkLog :: ∀ m a. Now m => LogLevel -> a -> m (Log a)
+mkLog l x = do
     now <- nowDateTime
-    pure $ Log { ts : now, level : l, msg : m }
+    pure $ Log { ts : now, level : l, vals : x }
 
 -- | meant to be read by people as opposed to something programatically accessible like msgpack or json
-humanString :: Log -> String
-humanString (Log log) = fold [display log.ts, " ", display log.level, " ", log.msg]
+humanString :: forall a. Display a => Log a -> String
+humanString l@(Log log) = fold [display log.ts, " ", display log.level, " ", msg l]

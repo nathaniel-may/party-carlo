@@ -15,6 +15,7 @@ import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Log as Log
+import PartyCarlo.Pages.Home.Logs (HomeLog)
 import PartyCarlo.Store (Env(..))
 import PartyCarlo.Store as Store
 import PartyCarlo.Utils (randomEff)
@@ -43,7 +44,7 @@ instance nowProdM :: Now ProdM where
     nowDateTime = liftEffect Now.nowDateTime
 
 -- | logs messages to the console. could add sending to a log service as well here.
-instance logMessagesProdM :: LogMessages ProdM where
+instance logMessagesProdM :: LogMessages HomeLog ProdM where
     logMessage log = do
         store <- getStore
         case store.env, Log.level log of

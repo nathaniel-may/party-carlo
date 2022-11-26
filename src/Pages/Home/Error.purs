@@ -7,6 +7,7 @@ import PartyCarlo.Data.Display (class Display)
 import PartyCarlo.Utils (displayTrunc)
 
 
+-- TODO add another layer of heirarchy so it's clear which errors are being passed
 data Error
     = InvalidNumber String
     | InvalidProbability String Number

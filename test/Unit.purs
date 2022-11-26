@@ -8,6 +8,7 @@ import Prelude
 
 import Control.Monad.State.Class (class MonadState, get)
 import Data.Array (length)
+import Data.Array as Array
 import Data.Either (hush)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
@@ -16,11 +17,13 @@ import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
+import PartyCarlo.Data.Log (vals)
 import PartyCarlo.Data.Probability (p95, mkProbability)
 import PartyCarlo.MonteCarlo (monteCarloConfidenceInterval)
 import PartyCarlo.Pages.Home (State(..))
 import PartyCarlo.Pages.Home as Home
 import PartyCarlo.Pages.Home.Error (Error(..))
+import PartyCarlo.Pages.Home.Logs (HomeLog(..))
 import Test.Capability.Assert (class Assert, assert, assertEqual, fail)
 import Test.Capability.Metadata (class Metadata, getMeta)
 import Test.TestM as TestM
@@ -32,7 +35,7 @@ allTests
     . Assert m
     => Metadata TestM.Meta m
     => Sleep m
-    => LogMessages m 
+    => LogMessages HomeLog m 
     => Now m
     => Random m
     => MonadState Home.State m
@@ -45,7 +48,7 @@ test0
     . Assert m
     => Metadata TestM.Meta m
     => Sleep m
-    => LogMessages m 
+    => LogMessages HomeLog m 
     => Now m
     => Random m
     => MonadState Home.State m
@@ -54,6 +57,12 @@ test0 = do
     -- press the button with well formed input
     Home.handleAction' (Home.Data { e : Nothing, input : ".5" }) Home.ButtonPress
     s <- getMeta
+    -- assert that the log event which reports how long the calculation took was sent
+    assert "calculation duration should be logged" (
+        Array.any (\log -> case vals log of
+            CalculationDuration _ _ -> true
+            _ -> false) s.logs
+        )
     -- assert time effect and log effects happened the correct number of times
     assertEqual "the result should have been timed, so time should have been accessed two more times than the number of logs." { actual: s.timeCounter - (length s.logs), expected: 2 }
     assert "logged less than expected" (length s.logs >= 6)
@@ -82,7 +91,7 @@ test2
     . Assert m
     => Metadata TestM.Meta m
     => Sleep m
-    => LogMessages m 
+    => LogMessages HomeLog m 
     => Now m
     => Random m
     => MonadState Home.State m
@@ -102,7 +111,7 @@ test3
     . Assert m
     => Metadata TestM.Meta m
     => Sleep m
-    => LogMessages m 
+    => LogMessages HomeLog m 
     => Now m
     => Random m
     => MonadState Home.State m
@@ -124,7 +133,7 @@ test4
     . Assert m
     => Metadata TestM.Meta m
     => Sleep m
-    => LogMessages m 
+    => LogMessages HomeLog m 
     => Now m
     => Random m
     => MonadState Home.State m

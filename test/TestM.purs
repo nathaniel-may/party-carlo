@@ -22,6 +22,7 @@ import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
 import PartyCarlo.Data.Log (Log)
 import PartyCarlo.Pages.Home as Home
+import PartyCarlo.Pages.Home.Logs (HomeLog)
 import PartyCarlo.Utils (randomEff)
 import Test.Assert as Assert
 import Test.Capability.Assert (class Assert)
@@ -59,7 +60,7 @@ forceDateTime Nothing = forceDateTime Nothing
 -- | intended for redirecting effects into pure values
 type Meta =
     { timeCounter :: Int 
-    , logs :: Array Log
+    , logs :: Array (Log HomeLog)
     }
 
 initialMeta :: Meta
@@ -83,7 +84,7 @@ instance nowTestM :: Now TestM where
     nowDateTime = progressTime
 
 -- | store logs in memory in the Store monad so the log statements can be tested
-instance logMessagesTestM :: LogMessages TestM where
+instance logMessagesTestM :: LogMessages HomeLog TestM where
     logMessage log = modifyMeta_ \s -> (s { logs = s.logs <> [log] })
 
 instance randomTestM :: Random TestM where

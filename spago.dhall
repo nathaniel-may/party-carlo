@@ -5,7 +5,6 @@
   , "assert"
   , "console"
   , "datetime"
-  , "debug"
   , "effect"
   , "either"
   , "enums"

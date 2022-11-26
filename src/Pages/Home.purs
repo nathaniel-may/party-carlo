@@ -5,11 +5,9 @@ module PartyCarlo.Pages.Home where
 import Prelude hiding (show)
 
 import Control.Monad.State.Class (class MonadState)
-import Data.Array (filter, length)
-import Data.DateTime (diff)
+import Data.Array (filter)
 import Data.Either (Either(..), note)
 import Data.Enum (pred, succ)
-import Data.Foldable (fold)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Number as Number
 import Data.String as String
@@ -21,7 +19,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import PartyCarlo.Capability.LogMessages (class LogMessages, log)
+import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now, nowDateTime)
 import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep, sleep)
@@ -30,19 +28,19 @@ import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.ResultCircle (resultCircle)
 import PartyCarlo.Components.HTML.Utils (css)
 import PartyCarlo.Data.Display (display)
-import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, mkProbability)
 import PartyCarlo.Data.Result (Interval(..), Result)
 import PartyCarlo.Data.SortedArray as SortedArray
 import PartyCarlo.MonteCarlo (confidenceInterval, sample)
 import PartyCarlo.Pages.Home.Error (Error(..))
+import PartyCarlo.Pages.Home.Logs (HomeLog(..), HomeStateType(..), log)
 import PartyCarlo.Utils (mapLeft)
 
 
 data Action 
     = ReceiveInput String
     | ButtonPress
-    | ShowBars Interval
+    | ShowBars Interval -- TODO remove this.
     | ClearDefaultText
     | ResultUp
     | ResultDown
@@ -73,7 +71,7 @@ defaultTextAreaValue = "Enter a list of probabilities: One for each attendee.\n\
 component
     :: ∀ q o m
     . MonadAff m
-    => LogMessages m
+    => LogMessages HomeLog m
     => Now m
     => Random m
     => Sleep m
@@ -95,7 +93,7 @@ component = H.mkComponent
     handleAction
         :: ∀ c
         . MonadAff m
-        => LogMessages m 
+        => LogMessages HomeLog m 
         => Now m
         => Random m
         => Sleep m
@@ -182,7 +180,7 @@ component = H.mkComponent
 -- | a testable breakout of the handleAction function for the component
 handleAction' 
     :: ∀ m
-    . LogMessages m 
+    . LogMessages HomeLog m 
     => Now m
     => Random m
     => Sleep m
@@ -226,29 +224,29 @@ handleAction' _ (ReceiveInput _) =
 
 -- move to the edit data view from the results view
 handleAction' (Results st) ButtonPress = do
-    log Debug "party carlo pressed in results view"
-    log Debug "returning to edit view"
+    log (PartyCarloButtonPressed ResultsState)
+    log (Transition ResultsState DataState)
     H.put (Data { e : Nothing, input : st.input })
 
 -- pressing the button on the data view will parse the input then run the experiments
 handleAction' (Data st) ButtonPress = do
-    log Debug "button pressed in data view"
-    log Debug  "run action initiated"
+    log (PartyCarloButtonPressed DataState)
+    log RunAction
     case parse <<< stripInput $ st.input of
         Left e -> do
-            log Debug $ "parsing failed: " <> display e
+            log (ParsingFailed e)
             H.put (Data (st { e = Just e }))
         Right dist -> do
-            log Info  $ "parsed probabilities for " <> (display $ length dist) <> " attendees"
-            log Debug $ "parsed distribution: " <> display dist
-            log Info  $ "running " <> display experimentCount <> " experiments"
+            log (ParsedNProbabilities dist)
+            log (Distribution dist)
+            log (RunningNExperiments experimentCount)
             H.put Loading
             sleep (Milliseconds 0.0)
             start <- nowDateTime
             exp <- runExperiments dist
             case exp of
                 Left e -> do
-                    log Error  "confidence interval calculation failed"
+                    log MonteCarloFailed
                     H.put ( Data ( { input: st.input, e: Just e } ) )
                 Right r -> do
                     H.put ( Results (
@@ -257,17 +255,15 @@ handleAction' (Data st) ButtonPress = do
                         , show: P95
                         } ) )
                     end <- nowDateTime
-                    log Info $ "result calculated in " <> display (diff end start :: Milliseconds) <> ""
-                    log Debug $ fold ["result set: p90=", display r.p90, " p95=", display r.p95, " p99=", display r.p99, " p99.9=", display r.p999]
+                    log (CalculationDuration start end)
+                    log (Intervals r)
 
 -- nothing to do on other views
-handleAction' _ ButtonPress = do
-    log Debug "party carlo pressed but there's nothing to do"
+handleAction' _ ButtonPress =
     pure unit
 
 -- show the vertical graph bars on the results view
-handleAction' (Results st) (ShowBars interval) = do
-    log Debug $ fold ["showing bars for ", display interval , " inverval"]
+handleAction' (Results st) (ShowBars interval) =
     H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
 
 -- no bars to show on other views
