@@ -59,6 +59,5 @@ type Result =
     , p90 :: Tuple Int Int 
     , p95 :: Tuple Int Int 
     , p99 :: Tuple Int Int 
-    , p999 :: Tuple Int Int 
-    , showBars :: Maybe Interval -- TODO remove this
+    , p999 :: Tuple Int Int
     }

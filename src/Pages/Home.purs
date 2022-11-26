@@ -40,7 +40,6 @@ import PartyCarlo.Utils (mapLeft)
 data Action 
     = ReceiveInput String
     | ButtonPress
-    | ShowBars Interval -- TODO remove this.
     | ClearDefaultText
     | ResultUp
     | ResultDown
@@ -262,14 +261,6 @@ handleAction' (Data st) ButtonPress = do
 handleAction' _ ButtonPress =
     pure unit
 
--- show the vertical graph bars on the results view
-handleAction' (Results st) (ShowBars interval) =
-    H.put (Results (st { result = (st.result { showBars = Just interval } ) } ) )
-
--- no bars to show on other views
-handleAction' _ (ShowBars _) = do
-    pure unit
-
 
 runExperiments :: ∀ m. Random m => Array Probability -> m (Either Error Result)
 runExperiments dist = do
@@ -280,8 +271,7 @@ runExperiments dist = do
         , p90: p90val
         , p95: p95val
         , p99: p99val
-        , p999: p999val 
-        , showBars: Nothing 
+        , p999: p999val
         }) <$> confidenceInterval  p90  sorted
             <*> confidenceInterval p95  sorted
             <*> confidenceInterval p99  sorted
