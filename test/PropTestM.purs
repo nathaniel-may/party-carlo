@@ -21,7 +21,6 @@ derive newtype instance bindTestM :: Bind PropTestM
 derive newtype instance monadTestM :: Monad PropTestM
 derive newtype instance monadEffectTestM :: MonadEffect PropTestM
 
--- TODO find or make a pure psudo-rng that isn't slow
 -- TODO put this in Aff instead with makeAff?
 instance randomTestM :: Random PropTestM where
     random = liftEffect randomEff
