@@ -264,7 +264,7 @@ handleAction' _ ButtonPress =
 
 runExperiments :: ∀ m. Random m => Array Probability -> m (Either Error Result)
 runExperiments dist = do
-    samples <- sample dist experimentCount
+    samples <- sample experimentCount dist
     let sorted = SortedArray.fromArray samples
     let result = (\p90val p95val p99val p999val ->
         { dist: sorted

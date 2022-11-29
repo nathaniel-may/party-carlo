@@ -22,7 +22,7 @@ type Dist = Array Probability
 
 monteCarloConfidenceInterval ::  ∀ m. Random m => Probability -> Int -> Dist -> m (Maybe (Tuple Int Int))
 monteCarloConfidenceInterval p count dist = do
-    samples <- sample dist count
+    samples <- sample count dist
     pure $ confidenceInterval p (SortedArray.fromArray samples)
 
 confidenceInterval :: ∀ a. Ord a => Probability -> SortedArray a -> Maybe (Tuple a a)
@@ -32,8 +32,8 @@ confidenceInterval p sorted = Tuple <$> low <*> high where
     high = sorted !! floor (Prob.toNumber p * toNumber len)
     len = length sorted
 
-sample :: ∀ m. Random m => Dist -> Int -> m (Array Int)
-sample dist count = replicateM count (oneSample dist)
+sample :: ∀ m. Random m => Int -> Dist -> m (Array Int)
+sample count dist = replicateM count (oneSample dist)
 
 oneSample :: ∀ m. Random m => Dist -> m Int
 oneSample = foldM (\count d -> (\p -> (if' (p < d) (count + 1) count)) <$> random) 0
