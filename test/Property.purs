@@ -14,6 +14,7 @@ import Data.Maybe (Maybe(..))
 import Data.Ord (abs)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Unsafe (unsafePerformEffect)
 import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Data.Probability (p999)
@@ -33,11 +34,11 @@ allTests = [ quickCheck test0, quickCheck test1, quickCheck test2 ]
 test0 :: Dist -> Result
 test0 dist = unsafePerformEffect $ runPropTestM test 
     where 
-        test :: ∀ m. Random m => m Result
+        test :: ∀ m. MonadEffect m => m Result
         test = do
             let expectedValue = round (sum $ Prob.toNumber <$> dist)
             -- testing with the smallest confidence interval that's used in the UI
-            result <- monteCarloConfidenceInterval p999 5000 dist
+            result <- liftEffect $ monteCarloConfidenceInterval p999 5000 dist
             pure $ case result of
                 Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test0"
                 -- the expected value should be in the middle of the interval
@@ -72,10 +73,10 @@ test1 = unsafePerformEffect $ runPropTestM test
 test2 :: PracticalDist -> Result
 test2 (PracticalDist dist) = unsafePerformEffect $ runPropTestM test 
     where 
-        test :: ∀ m. Random m => m Result
+        test :: ∀ m. MonadEffect m => m Result
         test = do
             -- running less experiments is fine with a larger distribution
-            result <- monteCarloConfidenceInterval p999 100 dist
+            result <- liftEffect $ monteCarloConfidenceInterval p999 100 dist
             pure $ case result of
                 Nothing -> false <?> "confidenceInterval returned Nothing after running monte carlo methods in test2"
                 -- the two ends of the interval should not be the same

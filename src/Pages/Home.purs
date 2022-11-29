@@ -14,7 +14,7 @@ import Data.String as String
 import Data.String.Utils (lines)
 import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (sequence)
-import Effect.Aff.Class (class MonadAff)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -31,7 +31,7 @@ import PartyCarlo.Data.Display (display)
 import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, mkProbability)
 import PartyCarlo.Data.Result (Interval(..), Result)
 import PartyCarlo.Data.SortedArray as SortedArray
-import PartyCarlo.MonteCarlo (confidenceInterval, sample)
+import PartyCarlo.MonteCarlo (confidenceInterval, parSample)
 import PartyCarlo.Pages.Home.Error (Error(..))
 import PartyCarlo.Pages.Home.Logs (HomeLog(..), HomeStateType(..), log)
 import PartyCarlo.Utils (mapLeft)
@@ -262,9 +262,9 @@ handleAction' _ ButtonPress =
     pure unit
 
 
-runExperiments :: ∀ m. Random m => Array Probability -> m (Either Error Result)
+runExperiments :: ∀ m. MonadAff m => Random m => Array Probability -> m (Either Error Result)
 runExperiments dist = do
-    samples <- sample experimentCount dist
+    samples <- liftAff $ parSample experimentCount dist
     let sorted = SortedArray.fromArray samples
     let result = (\p90val p95val p99val p999val ->
         { dist: sorted

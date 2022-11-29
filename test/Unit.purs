@@ -13,6 +13,7 @@ import Data.Either (hush)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
+import Effect.Class (class MonadEffect, liftEffect)
 import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.Random (class Random)
@@ -72,13 +73,13 @@ test0 = do
 test1
     :: forall m
     . Assert m
-    => Random m
+    => MonadEffect m
     => m Unit
 test1 = case traverse (hush <<< mkProbability) [0.1, 0.99, 0.5, 0.5] of
     Nothing -> 
         fail "probabilies failed to parse in test1"
     Just dist ->
-        monteCarloConfidenceInterval p95 Home.experimentCount dist >>= case _ of
+        liftEffect (monteCarloConfidenceInterval p95 Home.experimentCount dist) >>= case _ of
             Nothing -> fail "monte carlo methods failed for test1"
             Just (Tuple low high) -> assert 
                 "the size of the p95 confidence interval for the default input was zero" 
