@@ -42,6 +42,7 @@ h1 {
     /* the font leaves a little extra room under most
     of the letters so we pad the top for balance */
     padding-top: 0.9em;
+    margin-bottom: 40px;
 }
 
 @keyframes pulsate {
