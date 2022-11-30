@@ -3,6 +3,8 @@ module PartyCarlo.Pages.Home.Error where
 
 import Prelude
 
+import Data.Generic.Rep (class Generic)
+import Data.Show.Generic (genericShow)
 import PartyCarlo.Data.Display (class Display)
 import PartyCarlo.Utils (displayTrunc)
 
@@ -14,6 +16,10 @@ data Error
     | ExperimentsFailed
 
 derive instance eqError :: Eq Error
+derive instance genericError :: Generic Error _
+
+instance showError :: Show Error where
+    show = genericShow
 
 -- | string used to display the error value to the user (suitable for both UI and console logs)
 instance displayError :: Display Error where

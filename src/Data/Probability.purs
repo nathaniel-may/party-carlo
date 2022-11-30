@@ -20,6 +20,9 @@ newtype Probability = Probability Number
 derive newtype instance eqProbability :: Eq Probability
 derive newtype instance ordProbability :: Ord Probability
 
+instance showProbability :: Show Probability where
+    show (Probability n) = "Probability(" <> show n <> ")"
+
 mkProbability :: Number -> Either Number Probability
 mkProbability p = if p <= 1.0 && p >= 0.0 then Right (Probability p) else Left p
 

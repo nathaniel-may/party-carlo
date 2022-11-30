@@ -5,6 +5,8 @@ import Prelude
 
 import Data.Array as Array
 import Data.DateTime (DateTime, diff)
+import Data.Generic.Rep (class Generic)
+import Data.Show.Generic (genericShow)
 import Data.Time.Duration (Milliseconds)
 import PartyCarlo.Capability.LogMessages (class LogMessages, logMessage)
 import PartyCarlo.Capability.Now (class Now)
@@ -26,6 +28,11 @@ data HomeLog
     | MonteCarloFailed
     | CalculationDuration DateTime DateTime
     | Intervals Result
+
+derive instance genericHomeLog :: Generic HomeLog _
+
+instance showHomeLog :: Show HomeLog where
+    show = genericShow
 
 instance displayHomeLog :: Display HomeLog where
     display (PartyCarloButtonPressed state) =
@@ -62,6 +69,11 @@ data HomeStateType
     = DataState
     | ResultsState
     | LoadingState
+
+derive instance genericHomeStateType :: Generic HomeStateType _
+
+instance showHomeStateType :: Show HomeStateType where
+    show = genericShow
 
 instance displayHomeStateType :: Display HomeStateType where
     display DataState    = "data"

@@ -13,6 +13,8 @@ import Prelude
 
 import Data.DateTime (DateTime)
 import Data.Foldable (fold)
+import Data.Generic.Rep (class Generic)
+import Data.Show.Generic (genericShow)
 import PartyCarlo.Capability.Now (class Now, nowDateTime)
 import PartyCarlo.Data.Display (class Display, display)
 
@@ -23,7 +25,13 @@ data LogLevel
     | Info
     | Debug
 
-instance displayLog :: Display LogLevel where
+derive instance eqLogLevel :: Eq LogLevel
+derive instance genericLogLevel :: Generic LogLevel _
+
+instance showLogLevel :: Show LogLevel where
+    show = genericShow
+
+instance displayLogLevel :: Display LogLevel where
     display Error = "ERROR"
     display Warn  = "WARN "
     display Info  = "INFO "
@@ -35,6 +43,9 @@ data Log a = Log
     , level :: LogLevel
     , vals :: a
     }
+
+instance showLog :: Show a => Show (Log a) where
+    show (Log x) = "(Log " <> show x <> ")" 
 
 -- | Accessor for the ts field. Necessary because of the unexported constructor
 ts :: forall a. Log a -> DateTime

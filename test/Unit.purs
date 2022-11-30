@@ -10,7 +10,7 @@ import Control.Monad.State.Class (class MonadState, get)
 import Data.Array (length)
 import Data.Array as Array
 import Data.Either (hush)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Effect.Class (class MonadEffect, liftEffect)
@@ -18,7 +18,7 @@ import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
-import PartyCarlo.Data.Log (vals)
+import PartyCarlo.Data.Log (Log, LogLevel(..), level, vals)
 import PartyCarlo.Data.Probability (p95, mkProbability)
 import PartyCarlo.MonteCarlo (monteCarloConfidenceInterval)
 import PartyCarlo.Pages.Home (State(..))
@@ -42,6 +42,12 @@ allTests
     => MonadState Home.State m
     => Array (m Unit)
 allTests = [test0, test1, test2, test3, test4]
+
+failOnLog :: forall m. Assert m => Metadata TestM.Meta m => (Log HomeLog -> Boolean) -> m Unit
+failOnLog f = getMeta >>= \run -> maybe
+    (pure unit)
+    (\log -> fail $ "Error log found during test: " <> show log)
+    (Array.find f run.logs)
 
 -- | test that time and logging effects are taking place a reasonable amount of times within the component's handleAction function
 test0
@@ -67,6 +73,8 @@ test0 = do
     -- assert time effect and log effects happened the correct number of times
     assertEqual "the result should have been timed, so time should have been accessed two more times than the number of logs." { actual: s.timeCounter - (length s.logs), expected: 2 }
     assert "logged less than expected" (length s.logs >= 6)
+    -- fail if any logs have the error level
+    failOnLog \log -> level log == Error
 
 -- | test that the monte carlo library returns confidence intervals of size > 0.
 -- | this is useful for catching problems with the rng or seed storage
@@ -105,6 +113,8 @@ test2 = do
         Results { input: _, result: r } -> case r.p95 of
             Tuple x y -> assert "the confidence interval for the default input should not be of size zero" (x /= y)
         _ -> assert "while testing the result of pressing the button, an unexpected state change occurred." false
+    -- fail if any logs have the error level
+    failOnLog \log -> level log == Error
 
 -- | test that bad input is handled properly when the button is pressed the component's handleAction function
 test3
@@ -127,6 +137,8 @@ test3 = do
             fail $ "pressing the button with a bad input yielded the invalid state `Loading` in test 3"
         Results _ ->
             fail $ "pressing the button with a bad input yielded the invalid state `Results` in test 3"
+    -- fail if any logs have the error level
+    failOnLog \log -> level log == Error
     
 -- | test that bad input is handled properly when the button is pressed the component's handleAction function
 test4
@@ -146,7 +158,8 @@ test4 = do
         Data state ->
             assert "pressing the button with a bad Number input should yeild an InvalidProbability error" (state.e == Just (InvalidProbability badInput 2.0))
         Loading ->
-            fail $ "pressing the button with a bad input yielded the invalid state `Loading` in test 4"
+            fail "pressing the button with a bad input yielded the invalid state `Loading` in test 4"
         Results _ ->
-            fail $ "pressing the button with a bad input yielded the invalid state `Results` in test 4"
-    
+            fail "pressing the button with a bad input yielded the invalid state `Results` in test 4"
+    -- fail if any logs have the error level
+    failOnLog \log -> level log == Error
