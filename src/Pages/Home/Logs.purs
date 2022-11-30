@@ -6,11 +6,10 @@ import Prelude
 import Data.Array as Array
 import Data.DateTime (DateTime, diff)
 import Data.Time.Duration (Milliseconds)
-import PartyCarlo.Capability.LogMessages (class LogMessages)
-import PartyCarlo.Capability.LogMessages as LogMessages
+import PartyCarlo.Capability.LogMessages (class LogMessages, logMessage)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Data.Display (class Display, display)
-import PartyCarlo.Data.Log (LogLevel(..))
+import PartyCarlo.Data.Log (LogLevel(..), mkLog)
 import PartyCarlo.Data.Result (Result)
 import PartyCarlo.MonteCarlo (Dist)
 import PartyCarlo.Pages.Home.Error (Error)
@@ -81,6 +80,10 @@ logLevel MonteCarloFailed            = Error
 logLevel (CalculationDuration _ _)   = Info
 logLevel (Intervals _)               = Debug
 
+-- | Log a message with a level
+logWith :: forall m log. LogMessages log m => Now m => (log -> LogLevel) -> log -> m Unit
+logWith f l = logMessage <=< mkLog (f l) $ l
+
 -- | Log a message with the log event's default level
 log :: forall m. LogMessages HomeLog m => Now m => HomeLog -> m Unit
-log = LogMessages.log logLevel
+log = logWith logLevel
