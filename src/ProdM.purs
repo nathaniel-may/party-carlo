@@ -48,8 +48,14 @@ instance logMessagesProdM :: LogMessages HomeLog ProdM where
     logMessage log = do
         store <- getStore
         case store.env, Log.level log of
+            -- do not log debug messages in a production build
             Prod, Debug -> pure unit
-            _, _ -> liftEffect <<< Console.log $ Log.humanString log
+            _, Debug -> logToConsole Console.debug log
+            _, Info  -> logToConsole Console.info log
+            _, Warn  -> logToConsole Console.warn log
+            _, Error -> logToConsole Console.error log
+        where
+        logToConsole f log' = liftEffect <<< f $ Log.humanString log'
 
 instance randomProdM :: Random ProdM where
     random = liftEffect randomEff
