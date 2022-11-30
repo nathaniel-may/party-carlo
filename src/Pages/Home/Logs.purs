@@ -69,16 +69,17 @@ instance displayHomeStateType :: Display HomeStateType where
     display LoadingState = "loading"
 
 logLevel :: HomeLog -> LogLevel
-logLevel (PartyCarloButtonPressed _) = Debug
-logLevel (Transition _ _)            = Debug
-logLevel RunAction                   = Debug
-logLevel (ParsingFailed _)           = Info
-logLevel (ParsedNProbabilities _)    = Info
-logLevel (Distribution _)            = Debug
-logLevel (RunningNExperiments _)     = Info
-logLevel MonteCarloFailed            = Error
-logLevel (CalculationDuration _ _)   = Info
-logLevel (Intervals _)               = Debug
+logLevel = case _ of
+    PartyCarloButtonPressed _ -> Debug
+    Transition _ _            -> Debug
+    RunAction                 -> Debug
+    ParsingFailed _           -> Info
+    ParsedNProbabilities _    -> Info
+    Distribution _            -> Debug
+    RunningNExperiments _     -> Info
+    MonteCarloFailed          -> Error
+    CalculationDuration _ _   -> Info
+    Intervals _               -> Debug
 
 -- | Log a message with a level
 logWith :: forall m log. LogMessages log m => Now m => (log -> LogLevel) -> log -> m Unit
