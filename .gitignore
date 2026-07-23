@@ -3,9 +3,10 @@
 /.pulp-cache/
 /output/
 /generated-docs/
-/.psc-package/
 /.psc*
 /.purs*
 /.psa*
-/.spago
+/.spago/
+/src/Env.purs
 index.js
+index.js.map

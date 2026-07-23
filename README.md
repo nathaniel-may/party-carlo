@@ -3,7 +3,9 @@ It's easy to assign the likelihood you think one person will attend a party, but
 
 ## Local Dev
 ```
-spago bundle-app
+npm install
+npm run ps-install
+npm run build
 ```
 then open `./index.html` in a browser
 
