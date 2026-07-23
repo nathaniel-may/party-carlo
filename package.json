@@ -5,7 +5,7 @@
     "spago": "^1.0.0"
   },
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=24"
   },
   "scripts": {
     "select-env": "bash scripts/select-env.sh",
