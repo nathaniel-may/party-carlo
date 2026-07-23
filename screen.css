@@ -4,12 +4,15 @@
 }
 
 body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
     font-size: 22px;
     font-family: larke-neue, Verdana, sans-serif;
     background-color: #010a01;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: safe center;
 }
 
 .neon {
@@ -33,7 +36,9 @@ body {
     animation: pulsate 1.5s infinite alternate;
 }
 
-h1 {
+.title {
+    box-sizing: border-box;
+    width: 100%;
     text-align: center;
     font-size: 3rem;
     border: 0.15rem solid #fff;
@@ -42,7 +47,7 @@ h1 {
     /* the font leaves a little extra room under most
     of the letters so we pad the top for balance */
     padding-top: 0.9em;
-    margin-bottom: 40px;
+    margin: 0 0 40px;
 }
 
 @keyframes pulsate {
@@ -93,8 +98,25 @@ p {
 }
 
 #root.vcontainer {
+    box-sizing: border-box;
     max-width: 400px;
-    width: 400px;
+    width: calc(100% - 24px);
+    padding: 12px 0;
+}
+
+#root.data-view {
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100dvh;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.data-view .title {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0.55em;
+    padding-top: 0.65em;
 }
 
 .hcontainer {
@@ -121,6 +143,21 @@ textarea {
     background: transparent;
 }
 
+.data-view .error {
+    flex: 0 0 auto;
+    min-height: 1.2em;
+    margin: 0;
+}
+
+.data-view textarea {
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 120px;
+    height: auto;
+    margin: 0;
+}
+
 button {
     background-color: #010a01;
     color: white;
@@ -143,6 +180,28 @@ button:disabled {
 
 button:focus {
     outline: 0;
+}
+
+button.submit {
+    box-sizing: border-box;
+    flex: 0 0 56px;
+    width: 100%;
+    height: 56px;
+    margin: 0;
+    padding: 8px 20px;
+    border: 0.15rem solid #fff;
+    border-radius: 1.25rem;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+button.submit:hover {
+    filter: brightness(1.15);
+}
+
+button.submit:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 4px;
 }
 
 .p {
@@ -308,6 +367,11 @@ footer {
     font-family: Courier, Monaco, monospace;
     margin-top: 40px;
     margin-bottom: 40px;
+}
+
+.data-view footer {
+    flex: 0 0 auto;
+    margin: 4px 0 0;
 }
 
 a {
