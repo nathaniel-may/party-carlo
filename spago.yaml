@@ -1,0 +1,36 @@
+package:
+  name: party-carlo
+  dependencies:
+    - aff
+    - arrays
+    - assert
+    - console
+    - datetime
+    - effect
+    - either
+    - enums
+    - foldable-traversable
+    - formatters
+    - halogen
+    - halogen-store
+    - integers
+    - lists
+    - maybe
+    - now
+    - numbers
+    - parallel
+    - prelude
+    - quickcheck
+    - random
+    - safe-coerce
+    - strings
+    - stringutils
+    - transformers
+    - tuples
+  test:
+    main: Test.Main
+    dependencies: []
+
+workspace:
+  packageSet:
+    registry: 78.0.0
