@@ -63,7 +63,7 @@ experimentCount = 100000
 
 defaultTextAreaValue :: String
 defaultTextAreaValue = "Enter a list of probabilities: One for each attendee.\n\n"
-    <> "Hit the button above to get a confidence interval for overall attendance.\n\n"
+    <> "Use the button below to get a confidence interval for overall attendance.\n\n"
     <> "ex.\n\n"
     <> ".1\n.99\n.5"
 
@@ -104,8 +104,8 @@ component = H.mkComponent
 
     render :: ∀ c. State -> H.ComponentHTML Action c m
     render (Data st) =
-        HH.div [ HP.id "root", css "vcontainer" ]
-        [ titleButton
+        HH.div [ HP.id "root", css "vcontainer data-view" ]
+        [ title
         , HH.p [ css "error" ]
             [ HH.text $ maybe " " display st.e ]
         , HH.textarea
@@ -114,12 +114,17 @@ component = H.mkComponent
             , HE.onClick \_ -> ClearDefaultText
             , HE.onValueInput ReceiveInput
             ]
+        , HH.button
+            [ css "submit neon noselect"
+            , HE.onClick \_ -> ButtonPress
+            ]
+            [ HH.text "Get the numbers" ]
         , footer
         ]
 
     render Loading =
         HH.div [ HP.id "root", css "vcontainer noselect" ]
-        [ titleButton
+        [ title
         , loadingAnimation
         , renderToggleRow Loading
         , footer
@@ -127,7 +132,7 @@ component = H.mkComponent
 
     render (Results st) = 
         HH.div [ HP.id "root", css "vcontainer" ]
-        [ titleButton
+        [ title
         -- TODO move this text into an info view
         -- , HH.p_
         --     [ HH.text $ "After running " <> display experimentCount <> " simulations of your party attendance, you are 95% confident that somewhere between " <> display (fst st.result.p95) <> " and " <> display (snd st.result.p95) <> " people will attend." ]
@@ -140,11 +145,9 @@ component = H.mkComponent
         , footer
         ]
 
-    titleButton :: ∀ i. HH.HTML i Action
-    titleButton = HH.h1 
-        [ css "neon noselect"
-        , HE.onClick \_ -> ButtonPress
-        ] 
+    title :: ∀ i. HH.HTML i Action
+    title = HH.h1
+        [ css "title neon noselect" ]
         [ HH.text "Party Carlo" ]
 
     renderToggleRow :: ∀ i. State -> HH.HTML i Action
