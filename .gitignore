@@ -9,3 +9,4 @@
 /.spago/
 /src/Env.purs
 index.js
+index.js.map
