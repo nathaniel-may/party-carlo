@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "esbuild": "^0.15.8",
+    "papaparse": "^5.7.0",
     "purescript": "^0.15.15",
     "spago": "^1.0.0"
   },

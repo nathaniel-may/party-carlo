@@ -2,6 +2,7 @@ package:
   name: party-carlo
   dependencies:
     - aff
+    - aff-promise
     - arrays
     - assert
     - console
@@ -11,8 +12,10 @@ package:
     - enums
     - foldable-traversable
     - formatters
+    - functions
     - halogen
     - halogen-store
+    - halogen-subscriptions
     - integers
     - lists
     - maybe
@@ -22,6 +25,7 @@ package:
     - prelude
     - quickcheck
     - random
+    - refs
     - safe-coerce
     - strings
     - stringutils
