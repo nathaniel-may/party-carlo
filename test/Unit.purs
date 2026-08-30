@@ -18,12 +18,13 @@ import PartyCarlo.Capability.LogMessages (class LogMessages)
 import PartyCarlo.Capability.Now (class Now)
 import PartyCarlo.Capability.Random (class Random)
 import PartyCarlo.Capability.Sleep (class Sleep)
+import PartyCarlo.Core as Core
+import PartyCarlo.Core.Error (Error(..))
 import PartyCarlo.Data.Log (Log, LogLevel(..), level, vals)
 import PartyCarlo.Data.Probability (p95, mkProbability)
 import PartyCarlo.MonteCarlo (monteCarloConfidenceInterval)
 import PartyCarlo.Pages.Home (State(..))
 import PartyCarlo.Pages.Home as Home
-import PartyCarlo.Pages.Home.Error (Error(..))
 import PartyCarlo.Pages.Home.Logs (HomeLog(..))
 import Test.Capability.Assert (class Assert, assert, assertEqual, fail)
 import Test.Capability.Metadata (class Metadata, getMeta)
@@ -87,7 +88,7 @@ test1 = case traverse (hush <<< mkProbability) [0.1, 0.99, 0.5, 0.5] of
     Nothing -> 
         fail "probabilies failed to parse in test1"
     Just dist ->
-        liftEffect (monteCarloConfidenceInterval p95 Home.experimentCount dist) >>= case _ of
+        liftEffect (monteCarloConfidenceInterval p95 Core.experimentCount dist) >>= case _ of
             Nothing -> fail "monte carlo methods failed for test1"
             Just (Tuple low high) -> assert 
                 "the size of the p95 confidence interval for the default input was zero" 

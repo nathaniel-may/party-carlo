@@ -5,16 +5,11 @@ module PartyCarlo.Pages.Home where
 import Prelude hiding (show)
 
 import Control.Monad.State.Class (class MonadState)
-import Data.Array (filter)
-import Data.Either (Either(..), note)
+import Data.Either (Either(..))
 import Data.Enum (pred, succ)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Number as Number
-import Data.String as String
-import Data.String.Utils (lines)
 import Data.Time.Duration (Milliseconds(..))
-import Data.Traversable (sequence)
-import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -27,14 +22,11 @@ import PartyCarlo.Components.HTML.Footer (footer)
 import PartyCarlo.Components.HTML.Loading (loadingAnimation)
 import PartyCarlo.Components.HTML.ResultCircle (resultCircle)
 import PartyCarlo.Components.HTML.Utils (css)
+import PartyCarlo.Core (experimentCount, parse, runExperiments, stripInput)
+import PartyCarlo.Core.Error (Error)
 import PartyCarlo.Data.Display (display)
-import PartyCarlo.Data.Probability (Probability, p90, p95, p99, p999, mkProbability)
 import PartyCarlo.Data.Result (Interval(..), Result)
-import PartyCarlo.Data.SortedArray as SortedArray
-import PartyCarlo.MonteCarlo (confidenceInterval, parSample)
-import PartyCarlo.Pages.Home.Error (Error(..))
 import PartyCarlo.Pages.Home.Logs (HomeLog(..), HomeStateType(..), log)
-import PartyCarlo.Utils (mapLeft)
 
 
 data Action 
@@ -57,9 +49,6 @@ data State
     , show :: Interval
     }
     | Loading
-
-experimentCount :: Int
-experimentCount = 100000
 
 defaultTextAreaValue :: String
 defaultTextAreaValue = "Enter a list of probabilities: One for each attendee.\n\n"
@@ -245,7 +234,7 @@ handleAction' (Data st) ButtonPress = do
             H.put Loading
             sleep (Milliseconds 0.0)
             start <- nowDateTime
-            exp <- runExperiments dist
+            exp <- runExperiments experimentCount dist
             case exp of
                 Left e -> do
                     log MonteCarloFailed
@@ -263,29 +252,3 @@ handleAction' (Data st) ButtonPress = do
 -- nothing to do on other views
 handleAction' _ ButtonPress =
     pure unit
-
-
-runExperiments :: ∀ m. MonadAff m => Random m => Array Probability -> m (Either Error Result)
-runExperiments dist = do
-    samples <- liftAff $ parSample experimentCount dist
-    let sorted = SortedArray.fromArray samples
-    let result = (\p90val p95val p99val p999val ->
-        { dist: sorted
-        , p90: p90val
-        , p95: p95val
-        , p99: p99val
-        , p999: p999val
-        }) <$> confidenceInterval  p90  sorted
-            <*> confidenceInterval p95  sorted
-            <*> confidenceInterval p99  sorted
-            <*> confidenceInterval p999 sorted
-    pure $ note ExperimentsFailed result
-
-parse :: Array String -> Either Error (Array Probability)
-parse input = sequence $ (\s -> mapLeft (InvalidProbability s) <<< mkProbability =<< parseNum s) <$> input
-
-parseNum :: String -> Either Error Number
-parseNum s = maybe (Left $ InvalidNumber s) Right (Number.fromString s)
-
-stripInput :: String -> Array String
-stripInput s = filter (not String.null) $ String.trim <$> lines s

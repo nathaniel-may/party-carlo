@@ -6,7 +6,8 @@ import Prelude
 
 import Control.Monad.Trans.Class (lift)
 import Halogen (HalogenM)
-import PartyCarlo.Data.Log (Log)
+import PartyCarlo.Capability.Now (class Now)
+import PartyCarlo.Data.Log (Log, LogLevel, mkLog)
 
 
 class Monad m <= LogMessages log m where
@@ -15,3 +16,7 @@ class Monad m <= LogMessages log m where
 -- | This instance lets us avoid having to use `lift` when we use these functions in a component.
 instance logMessagesHalogenM :: LogMessages log m => LogMessages log (HalogenM st act slots msg m) where
     logMessage = lift <<< logMessage
+
+-- | Log a message with a level
+logWith :: forall m log. LogMessages log m => Now m => (log -> LogLevel) -> log -> m Unit
+logWith f l = logMessage <=< mkLog (f l) $ l

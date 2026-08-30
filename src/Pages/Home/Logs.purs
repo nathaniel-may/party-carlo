@@ -8,13 +8,13 @@ import Data.DateTime (DateTime, diff)
 import Data.Generic.Rep (class Generic)
 import Data.Show.Generic (genericShow)
 import Data.Time.Duration (Milliseconds)
-import PartyCarlo.Capability.LogMessages (class LogMessages, logMessage)
+import PartyCarlo.Capability.LogMessages (class LogMessages, logWith)
 import PartyCarlo.Capability.Now (class Now)
+import PartyCarlo.Core.Error (Error)
 import PartyCarlo.Data.Display (class Display, display)
-import PartyCarlo.Data.Log (LogLevel(..), mkLog)
+import PartyCarlo.Data.Log (LogLevel(..))
 import PartyCarlo.Data.Result (Result)
 import PartyCarlo.MonteCarlo (Dist)
-import PartyCarlo.Pages.Home.Error (Error)
 
 
 data HomeLog
@@ -92,10 +92,6 @@ logLevel = case _ of
     MonteCarloFailed          -> Error
     CalculationDuration _ _   -> Info
     Intervals _               -> Debug
-
--- | Log a message with a level
-logWith :: forall m log. LogMessages log m => Now m => (log -> LogLevel) -> log -> m Unit
-logWith f l = logMessage <=< mkLog (f l) $ l
 
 -- | Log a message with the log event's default level
 log :: forall m. LogMessages HomeLog m => Now m => HomeLog -> m Unit
