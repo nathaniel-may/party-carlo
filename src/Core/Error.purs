@@ -1,5 +1,5 @@
--- | Home page error type
-module PartyCarlo.Pages.Home.Error where
+-- | Core error type
+module PartyCarlo.Core.Error where
 
 import Prelude
 
