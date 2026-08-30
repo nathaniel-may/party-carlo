@@ -96,7 +96,7 @@ validateRow labels r =
 -- | cell "0.5\t0.9" (what a spreadsheet paste produces when the delimiter is not a comma) all
 -- | parse as 0.5. The batch API must fail the entire run on any cell that is not a number, so the
 -- | cell is shape-checked here first. `Core.parseNum` itself is unchanged: the textarea path keeps
--- | its historical leniency.
+-- | its historical leniency. See docs/adr/adr-002-strict-number-parsing.md.
 numberShape :: Regex
 numberShape = unsafeRegex "^[+-]?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?$" noFlags
 
