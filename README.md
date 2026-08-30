@@ -39,6 +39,10 @@ progress like the other calls.
 ```js
 const cols = await partyCarlo.parse(csv);   // array of { label, probabilities } - inspect/edit here
 const rows = await partyCarlo.run(cols);
+```
+
+Then, as a **separate** console entry:
+```js
 copy(partyCarlo.toCsv(rows));
 ```
 
